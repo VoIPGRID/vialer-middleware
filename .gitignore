@@ -1,0 +1,16 @@
+.coverage
+*.pyc
+.idea
+.tags
+/final_static
+/logs
+/deploy/local
+/mysql
+coverage.xml
+xunit.xml
+
+# To avoid conflicts between dev en live yml.
+production.yml
+
+# Variables that will be added to the env on production/development.
+.env

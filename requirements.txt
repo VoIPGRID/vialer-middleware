@@ -1,0 +1,24 @@
+# Needed for DB connection.
+mysqlclient==1.3.7
+
+# Package for sending push notifications for IOS device.
+apns-clerk==0.2.0
+
+# Package for sending push notifications for Android device.
+python-gcm==0.4.0
+git+git://github.com/olucurious/PyFCM.git@0.0.9
+
+Django==1.9.9
+
+# Framwork used for the API.
+djangorestframework==3.3.3
+
+redis-py-cluster==1.2.0
+
+sqlparse==0.1.19
+
+uwsgi==2.0.13.1
+
+# Testing.
+django-nose==1.4.3
+coverage==4.1

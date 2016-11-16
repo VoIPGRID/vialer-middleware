@@ -1,0 +1,49 @@
+db:
+  # Image version of mysql.
+  image: mysql:5.6
+
+  # Add variables to environment.
+  environment:
+   - MYSQL_ROOT_PASSWORD=root1234
+   - MYSQL_DATABASE=middleware
+   - MYSQL_USER=dev
+   - MYSQL_PASSWORD=dev1234
+
+app:
+  # Build from codebase.
+  build: .
+
+  # Link db to app container.
+  links:
+   - db
+   - redis
+
+  # Expose internal port 8000 to external 8007.
+  ports:
+   - 8007:8000
+
+  # Read the .env file for variables. This makes the .env file
+  # required in the codebase!
+  env_file: .env
+
+  # Add variables to environment.
+  environment:
+   - DEBUG=True
+   - DB_ENV_NAME=middleware
+   - DB_ENV_USER=dev
+   - DB_ENV_PASSWORD=dev1234
+   - DB_ENV_HOST=db
+
+  # Map log files from container to local disk.
+  volumes:
+   #Development directory
+   - .:/usr/src/app
+   #/Dev
+   - ./deploy/local:/usr/src/app/deploy/local
+   - ./logs:/var/log/middleware
+
+  # Run debug mode script.
+  command: /usr/src/app/deploy/run_debug.sh
+
+redis:
+  image: grokzen/redis-cluster:3.0.6

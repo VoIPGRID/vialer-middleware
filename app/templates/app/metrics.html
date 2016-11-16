@@ -1,0 +1,53 @@
+{% extends 'admin/base_site.html' %}
+{% block title %}Metrics{% endblock %}
+
+{% block content %}
+<h1>Metrics</h1>
+{% for metric in metrics %}
+<div style="float: left; margin-right: 20px">
+<h2>{{ metric.platform }}</h2>
+<table>
+    <tr>
+        <td>Date range</td>
+        <td>{{ metric.start_date }} - {{ metric.end_date }}</td>
+    </tr>
+    <tr>
+        <td>Total</td>
+        <td>{{ metric.total_count }}</td>
+    </tr>
+    <tr>
+        <td>Available count</td>
+        <td>{{ metric.available.count }}</td>
+    </tr>
+    <tr>
+        <td>Available avg</td>
+        <td>{{ metric.available.avg }}</td>
+    </tr>
+    <tr>
+        <td>Available min</td>
+        <td>{{ metric.available.min }}</td>
+    </tr>
+    <tr>
+        <td>Available max</td>
+        <td>{{ metric.available.max }}</td>
+    </tr>
+    <tr>
+        <td>Not available count</td>
+        <td>{{ metric.not_available.count }}</td>
+    </tr>
+    <tr>
+        <td>Not available avg</td>
+        <td>{{ metric.not_available.avg }}</td>
+    </tr>
+    <tr>
+        <td>Not available min</td>
+        <td>{{ metric.not_available.min }}</td>
+    </tr>
+    <tr>
+        <td>Not available max</td>
+        <td>{{ metric.not_available.max }}</td>
+    </tr>
+</table>
+</div>
+{% endfor %}
+{% endblock %}
