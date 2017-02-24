@@ -24,20 +24,23 @@ def get_metrics(start_date, end_date, platform):
     def _get_avg(query):
         return query.aggregate(Avg('roundtrip_time'))['roundtrip_time__avg']
 
-    base_query = ResponseLog.objects.filter(platform=platform, date__range=(start_date, end_date))
+    base_query = ResponseLog.objects.filter(
+        platform=platform, date__range=(start_date, end_date)).order_by('roundtrip_time')
     total_count = base_query.count()
+
+    percentile = int(total_count * 0.95)
 
     available_query = base_query.filter(available=True)
     available_count = available_query.count()
-    avg_available = _get_avg(available_query)
-    min_available = _get_min(available_query)
-    max_available = _get_max(available_query)
+    avg_available = _get_avg(available_query[:percentile])
+    min_available = _get_min(available_query[:percentile])
+    max_available = _get_max(available_query[:percentile])
 
     not_available_query = base_query.filter(available=False)
     not_available_count = not_available_query.count()
-    avg_not_available = _get_avg(not_available_query)
-    min_not_available = _get_min(not_available_query)
-    max_not_available = _get_max(not_available_query)
+    avg_not_available = _get_avg(not_available_query[:percentile])
+    min_not_available = _get_min(not_available_query[:percentile])
+    max_not_available = _get_max(not_available_query[:percentile])
 
     results = {
         'platform': platform,
