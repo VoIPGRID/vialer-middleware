@@ -1,6 +1,16 @@
-# Incoming Call Notifier
+# Vialer Middleware
+
 The main purpose of the project is to provide a middle man between phone apps
 and SIP servers to be able to deliver incoming calls.
+
+## Status
+
+Active
+
+Although this is a fully functional product for us do not expect this to be
+the case for your situation. Our goal is to keep the source open so other
+developers can learn from our approach and adapt our code to their needs or start
+from scratch with the archticture and inner workings all planned out already.
 
 ## Concept
 The concept of receiving incoming calls on phone apps can be divided into 2 parts.
@@ -40,89 +50,59 @@ involving a sip call. This is how to handle a incoming call:
 This flow assumes all goes well. There are situations where the app will not be able to respond in a timely manner
 due to connectivity issues and will not be able to receive the incoming call.
 
-## Push services
-The service relies heavely on push notification services provided by Apple and Google.
+## Usage
+See docs for more info.
 
-### Apple
-For sending push notifications to an Apple device there multiple options. At
-the moment the native way of sending pushes is used for Apple devices. This
-involves making requests to send a push notification to a device using a
-certificate provided by Apple. In this case a special VoIP certificate is
-used to ensure the highest priority for the notification to be send.
+### Requirements
 
-### Google
-Google has 2 services for sending push notification, Google Cloud Messaging and Firebase.
-Firebase is the suggested solution for new projects but the service supports both at the moment.
-To be able to send notification you need an account and API key used for sending the notifications
-to the devices.
+ * docker
+ * docker-compose
 
-## API
-Entrypoints
+### Installation
 
-### Authentication
-2 Endpoints of the API require basic authentication. These headers will
-be used to authenticate through an other API that holds the info about
-sip accounts. During this authentication a check is performed to validate
-whether the user who made the requests is the owner of the sip account.
+```
+$ git clone git@github.com:VoIPGRID/vialer-middleware.git
+$ cd vialer-middleware
+$ touch .env
+$ docker-compose build
+```
 
-The endpoint that the PBX machines talk to should be firewalled. Access on
-this endpoint should only be possible for the IP range of your PBX machines.
-There is no reason for any other client to be able to post to this endpoint.
+### Running
 
-The endpoint the phone responds to when answering to a incoming call checks if
-the unique token posted belongs to a waiting incoming call. There is no basic
-authentication here because evert ms counts when it comes to incoming calls.
+```
+$ docker-compose up
+```
 
-### /api/incoming-call/ (POST)
-Endpoint for the PBX machine. This endpoint should be firewalled! See above.
+## Contributing
 
- * **sip_user_id (int)**: Account id of the voip account being called (required).
- * **phonenumber (string)**: Phonenumber of the caller (required).
- * **caller_id (string)**: Human readable caller id (optional).
- * **call_id (string)**: PK reference used for the call (optional).
+See the [CONTRIBUTING.md](CONTRIBUTING.md) file on how to contribute to this project.
 
-### /api/call-response/ (POST)
-Enpoint for a device to respond to accept a call after waking up.
+## Contributors
 
- * **unique_key (string)**: Key that was given in the device push message as reference (required).
- * **message_start_time (float datetime)**: Time given in the device push message to time the roundtrip (required).
- * **available (boolean)**: Wether the device is available to accept the call (optional but default `True`).
-
-### /api/gcm-device/ & /api/android-device/ & /api/apns-device/ (POST)
-Endpoint for registering/updating a device (token).
-
-This endpoint requires authentication through HTTP Basic auth.
-
- * **sip_user_id (int)**: Account id of the voip account to register (required).
- * **token (string)**: Push token to send messages (required).
- * **app (string)**: App identifier like `com.voipgrid.vialer` (required).
- * **name (string)**: Name of the device (optional).
- * **os_version (string)**: Version of the OS on the device (optional).
- * **client_version (string)**: Version of the app used (optional).
- * **sandbox (boolean)**: Wether this device is a sandbox/test environment device (optional but default `False`).
-
-### /api/gcm-device/ & /api/android-device/ & /api/apns-device/ (DELETE)
-
-This endpoint requires authentication through HTTP Basic auth.
-
- * **sip_user_id (int)**: Account id of the voip account of the device to delete (required).
- * **token (string)**: Push token of the device to delete (required).
- * **app (string)**: App identifier like `com.voipgrid.vialer` of the device to delete (required).
+See the [CONTRIBUTORS.md](CONTRIBUTORS.md) file for a list of contributors to the project.
 
 ## Roadmap
-We have some improvements planned for the near future:
+
+### Changelog
+
+The changelog can be found in the [CHANGELOG.md](CHANGELOG.md) file.
+
+### In progress
+
+ * Multiple push notifications
+ * Documentation
+ * Sentry monitoring
+
+### Future
 
  * Replace spawning threads by Django channels workers to be more efficient with open connections.
 
-## Production setup
-A suggestion about how to run this project in production:
+## Get in touch with a developer
 
- * A database cluster of 3 or more machines with replication;
- * A redis cluster of 3 or more machines with 2 nodes per machine;
- * Stateless load-balanced webservers (2 or more) for handeling the API requests.
+If you want to report an issue see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more info.
 
-## Final note
-Although this is a fully functional product for us do not expect this to be
-the case for your situation. Our goal is to keep the source open so other
-developers can learn from our approach and adapt our code to their needs or start
-from scratch with the archticture and inner workings all planned out already.
+We will be happy to answer your other questions at opensource@wearespindle.com
+
+## License
+
+Vialer Middleware is made available under the MIT license. See the [LICENSE file](LICENSE) for more info.
