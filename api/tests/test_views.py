@@ -3,6 +3,7 @@ import time
 from unittest import mock
 
 from django.conf import settings
+from django.core.cache import cache
 from django.test import TestCase, TransactionTestCase
 from rest_framework.test import APIClient
 
@@ -200,7 +201,7 @@ class IOSIncomingCallTest(TransactionTestCase):
         thread.start()
 
         # Simulate some wait-time before device responds.
-        time.sleep(1)
+        time.sleep(1.5)
 
         app_data = {
             'unique_key': call_data['call_id'],
@@ -214,6 +215,7 @@ class IOSIncomingCallTest(TransactionTestCase):
 
         # Check if incoming-call got accepted.
         self.assertEqual(response.content, b'status=ACK')
+        self.assertEqual(cache.get('attempts'), 2)
 
     @mock.patch('app.push.send_apns_message', side_effect=mocked_send_apns_message)
     def test_not_available_incoming_call(self, *mocks):
@@ -243,7 +245,7 @@ class IOSIncomingCallTest(TransactionTestCase):
         thread.start()
 
         # Simulate some wait-time before device responds.
-        time.sleep(1)
+        time.sleep(1.5)
 
         app_data = {
             'unique_key': call_data['call_id'],
@@ -258,6 +260,7 @@ class IOSIncomingCallTest(TransactionTestCase):
 
         # Check if incoming-call got accepted.
         self.assertEqual(response.content, b'status=NAK')
+        self.assertEqual(cache.get('attempts'), 2)
 
     @mock.patch('app.push.send_apns_message', side_effect=mocked_send_apns_message)
     def test_too_late_incoming_call(self, *mocks):
@@ -308,6 +311,7 @@ class IOSIncomingCallTest(TransactionTestCase):
 
         # Check if incoming-call resulted in a NAK.
         self.assertEqual(response.content, b'status=NAK')
+        self.assertEqual(cache.get('attempts'), 3)
 
     @mock.patch('app.push.send_apns_message', side_effect=mocked_send_apns_message)
     def test_log_to_db(self, *mocks):
@@ -411,7 +415,7 @@ class AndroidIncomingCallTest(TransactionTestCase):
         thread.start()
 
         # Simulate some wait-time before device responds.
-        time.sleep(1)
+        time.sleep(1.5)
 
         app_data = {
             'unique_key': call_data['call_id'],
@@ -425,6 +429,7 @@ class AndroidIncomingCallTest(TransactionTestCase):
 
         # Check if incoming-call got accepted.
         self.assertEqual(response.content, b'status=ACK')
+        self.assertEqual(cache.get('attempts'), 2)
 
     @mock.patch('app.push.send_fcm_message', side_effect=mocked_send_fcm_message)
     def test_not_available_incoming_call(self, *mocks):
@@ -454,7 +459,7 @@ class AndroidIncomingCallTest(TransactionTestCase):
         thread.start()
 
         # Simulate some wait-time before device responds.
-        time.sleep(1)
+        time.sleep(1.5)
 
         app_data = {
             'unique_key': call_data['call_id'],
@@ -469,6 +474,7 @@ class AndroidIncomingCallTest(TransactionTestCase):
 
         # Check if incoming-call got accepted.
         self.assertEqual(response.content, b'status=NAK')
+        self.assertEqual(cache.get('attempts'), 2)
 
     @mock.patch('app.push.send_fcm_message', side_effect=mocked_send_fcm_message)
     def test_too_late_incoming_call(self, *mocks):
@@ -519,6 +525,7 @@ class AndroidIncomingCallTest(TransactionTestCase):
 
         # Check if incoming-call resulted in a NAK.
         self.assertEqual(response.content, b'status=NAK')
+        self.assertEqual(cache.get('attempts'), 3)
 
     @mock.patch('app.push.send_fcm_message', side_effect=mocked_send_fcm_message)
     def test_log_to_db(self, *mocks):

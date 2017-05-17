@@ -112,7 +112,8 @@ REDIS_SERVER_LIST = os.environ.get('REDIS_SERVER_LIST', 'redis:7000')
 # URL send with push notification payload so the app can respond to the right
 # server.
 APP_API_URL = os.environ.get('APP_API_URL')
-APP_PUSH_ROUNDTRIP_WAIT = int(os.environ.get('APP_PUSH_ROUNDTRIP_WAIT', 1500))
+APP_PUSH_ROUNDTRIP_WAIT = int(os.environ.get('APP_PUSH_ROUNDTRIP_WAIT', 4000))
+APP_PUSH_RESEND_INTERVAL = int(os.environ.get('APP_PUSH_RESEND_INTERVAL', 1000))
 
 LOGGING_DIR = os.environ.get('LOGGING_DIR', '/var/log/middleware')
 LOG_SOURCE = 'web-app'

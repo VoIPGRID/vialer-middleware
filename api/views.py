@@ -135,25 +135,35 @@ class IncomingCallView(VialerAPIView):
                 unique_key,
                 sip_user_id)
             )
-        except:
+        except Exception:
             logger.exception('{0} | EXCEPTION WHILE FINDING DEVICE FOR SIP_USER_ID : {1}'.format(
                 unique_key,
                 sip_user_id)
             )
         else:
+
+            attempt = 1
             # Send push message to wake up app.
             task_incoming_call_notify(
                 device,
                 unique_key,
                 phonenumber,
-                caller_id
+                caller_id,
+                attempt,
             )
 
-            wait_until = time.time() + (settings.APP_PUSH_ROUNDTRIP_WAIT / 1000)
+            # Time related settings.
+            wait_interval = settings.APP_PUSH_ROUNDTRIP_WAIT / 1000
+            wait_until = time.time() + wait_interval
+            resend_interval = settings.APP_PUSH_RESEND_INTERVAL / 1000
+            next_resend_time = time.time() + resend_interval
+
+            # Determine max possible attempts. Avoid sending a push
+            # close to the end of the loop.
+            max_attemps = int(wait_interval / resend_interval) - 1
+
             cache_key = 'call_{0}'.format(unique_key)
-
             redis_cache = RedisClusterCache()
-
             # Create cache entry with device platform as placeholder for the
             # available flag. Done for logging purposes.
             redis_cache.set(cache_key, device.app.platform)
@@ -186,6 +196,19 @@ class IncomingCallView(VialerAPIView):
                     # App is not available.
                     return Response('status=NAK')
                 else:
+                    # Try to resend the push message every X seconds or
+                    # after exceeding the max_attempts.
+                    if time.time() > next_resend_time and attempt < max_attemps:
+                        attempt += 1
+                        next_resend_time = time.time() + resend_interval
+                        task_incoming_call_notify(
+                            device,
+                            unique_key,
+                            phonenumber,
+                            caller_id,
+                            attempt,
+                        )
+
                     time.sleep(.01)  # wait 10 ms
 
             logger.info('{0} | {1} Device did NOT check in on time, sending NAK on {2}'.format(
@@ -339,7 +362,7 @@ class DeviceView(VialerAPIView):
         except Http404:
             logger.warning('Could not unregister device {0} for SIP_USER_ID {1}'.format(token, sip_user_id))
             raise
-        except:
+        except Exception:
             logger.exception('EXCEPTION WHILE UNREGISTERING DEVICE {0} FOR SIP_USER_ID : {1}'.format(
                 token,
                 sip_user_id)
