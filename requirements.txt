@@ -22,3 +22,6 @@ uwsgi==2.0.13.1
 # Testing.
 django-nose==1.4.3
 coverage==4.1
+
+# Logging.
+raven==6.0.0
