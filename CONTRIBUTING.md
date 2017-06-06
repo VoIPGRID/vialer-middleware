@@ -1,31 +1,29 @@
 # Contributing
+Nice having you onboard!
 
-We love contributions from everyone! Feel free to send us an email
-at opensource@wearespindle.com about your idea's or contribute in the following way:
+We love contributions from everyone and here are a few things to keep in mind when contributing.
 
-Fork and clone the repo:
+## Issues
+Somethings not working like it should? We've got you covered!
 
-    git clone git@github.com:your-username/vialer-incoming-call-notifier.git
+ * Use github to create an issue;
+ * Write a descriptive title;
+ * Fill out the issue template;
+ * Wait for a developer to make coffee and get back to you;
 
-Create a feature branch for your contribution:
+## Pull requests
+You want to help out by contributing code? Here's a checklist for a pull request:
 
-    git checkout -b feature/cool-thing-you-made
-
-Create the code and tests to support your contribution
-
-Run the test:
-
-    docker-compose run app python manage.py test
-
-Push to the fork and [create a pull request][pull_request]
-
-[pull_request]: https://help.github.com/articles/creating-a-pull-request/
-
-The only thing left is to wait for us to get back to you.
-
-Things to keep in mind when creating a pull request:
-
- * We like tests so expand them or make new ones for your code;
- * Adhere to the codestyle enforced by [flake8][flake].
+ * Fork the project;
+ * Create a branch for your code;
+ * Write your awesome code;
+ * Adhere to the coding style guide [flake8][flake];
+ * Make sure all tests pass `docker-compose run app python manage.py test`;
+ * Don't forget to add yourself to the [CONTRIBUTORS.md](CONTRIBUTORS.md) file;
+ * Squash commits and provide a sane commit message;
+ * Create a pull request;
+ * Write a descriptive title;
+ * Fill out the pull request template;
+ * Wait for a developer to make coffee and get back to you;
 
 [flake]: http://flake8.pycqa.org/en/latest/

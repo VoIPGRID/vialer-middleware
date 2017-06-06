@@ -33,6 +33,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'raven.contrib.django.raven_compat',
     'rest_framework',
     'app',
     'api',
@@ -111,7 +112,8 @@ REDIS_SERVER_LIST = os.environ.get('REDIS_SERVER_LIST', 'redis:7000')
 # URL send with push notification payload so the app can respond to the right
 # server.
 APP_API_URL = os.environ.get('APP_API_URL')
-APP_PUSH_ROUNDTRIP_WAIT = int(os.environ.get('APP_PUSH_ROUNDTRIP_WAIT', 1500))
+APP_PUSH_ROUNDTRIP_WAIT = int(os.environ.get('APP_PUSH_ROUNDTRIP_WAIT', 4000))
+APP_PUSH_RESEND_INTERVAL = int(os.environ.get('APP_PUSH_RESEND_INTERVAL', 1000))
 
 LOGGING_DIR = os.environ.get('LOGGING_DIR', '/var/log/middleware')
 LOG_SOURCE = 'web-app'
@@ -132,6 +134,11 @@ LOGGING = {
         }
     },
     'handlers': {
+        'sentry': {
+            'level': 'ERROR',
+            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+            'tags': {'custom-tag': 'x'},
+        },
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
@@ -176,3 +183,8 @@ VG_API_USER_URL = urljoin(VG_API_BASE_URL, os.environ.get('VG_API_USER_URL', '/a
 TESTING = os.environ.get('TESTING', sys.argv[1:2] == ['test'])
 PERFORMANCE_TEST_ITERATIONS = os.environ.get('PERFORMANCE_TEST_ITERATIONS', 1)
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+
+
+RAVEN_CONFIG = {
+    'dsn': os.environ.get('SENTRY_DSN', None),
+}

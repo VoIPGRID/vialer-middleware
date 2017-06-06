@@ -4,11 +4,11 @@ from .push import send_call_message, send_text_message
 
 
 @threaded
-def task_incoming_call_notify(device, unique_key, phonenumber, caller_id):
+def task_incoming_call_notify(device, unique_key, phonenumber, caller_id, attempt):
     """
     Threaded task to send a call push notification.
     """
-    send_call_message(device, unique_key, phonenumber, caller_id)
+    send_call_message(device, unique_key, phonenumber, caller_id, attempt)
 
 
 @threaded

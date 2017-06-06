@@ -20,7 +20,7 @@ TYPE_CALL = 'call'
 TYPE_MESSAGE = 'message'
 
 
-def send_call_message(device, unique_key, phonenumber, caller_id):
+def send_call_message(device, unique_key, phonenumber, caller_id, attempt):
     """
     Function to send the call push notification.
 
@@ -34,6 +34,7 @@ def send_call_message(device, unique_key, phonenumber, caller_id):
         'unique_key': unique_key,
         'phonenumber': phonenumber,
         'caller_id': caller_id,
+        'attempt': attempt,
     }
     if device.app.platform == APNS_PLATFORM:
         send_apns_message(device, device.app, TYPE_CALL, data)
