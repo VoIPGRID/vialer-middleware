@@ -170,7 +170,7 @@ DATABASES = {
         'USER': os.environ.get('DB_ENV_USER', 'dev'),
         'PASSWORD': os.environ.get('DB_ENV_PASSWORD', 'dev1234'),
         'HOST': os.environ.get('DB_ENV_HOST', 'db'),
-        'PORT': os.environ.get('DB_ENV_PORT', '3306'),
+        'PORT': os.environ.get('DB_ENV_PORT', '4040'),
     }
 }
 
@@ -188,3 +188,8 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 RAVEN_CONFIG = {
     'dsn': os.environ.get('SENTRY_DSN', None),
 }
+
+try:
+    from .local_settings import *
+except ImportError:
+    pass

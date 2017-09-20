@@ -13,7 +13,7 @@ check_up() {
         >/dev/null 2>/dev/null && break || \
         echo "Waiting that $service on ${host}:${port} is started (sleeping for 5)"
 
-        if [[ "${counter}" == "${max}" ]];then
+        if [ ${counter} -eq ${max} ];then
             echo "Could not connect to ${service} after some time"
             echo "Investigate locally the logs with fig logs"
             exit 1
@@ -21,7 +21,7 @@ check_up() {
 
         sleep 5
 
-        (( counter++ ))
+        counter=$((counter+1))
     done
 }
 
