@@ -33,6 +33,7 @@ app:
    - DB_ENV_USER=dev
    - DB_ENV_PASSWORD=dev1234
    - DB_ENV_HOST=db
+   - DB_ENV_PORT=3306
 
   # Map log files from container to local disk.
   volumes:

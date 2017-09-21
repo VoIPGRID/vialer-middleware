@@ -5,12 +5,9 @@
 /final_static
 /logs
 /deploy/local
-/deploy/run_local.sh
 /mysql
 coverage.xml
 xunit.xml
-/main/local_settings.py
-docker-compose.override.yml
 
 # To avoid conflicts between dev en live yml.
 production.yml

@@ -188,8 +188,3 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 RAVEN_CONFIG = {
     'dsn': os.environ.get('SENTRY_DSN', None),
 }
-
-try:
-    from .local_settings import *
-except ImportError:
-    pass
