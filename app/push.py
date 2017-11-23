@@ -29,6 +29,7 @@ def send_call_message(device, unique_key, phonenumber, caller_id, attempt):
         unique_key (string): String with the unique_key.
         phonenumber (string): Phonenumber that is calling.
         caller_id (string): ID of the caller.
+        attempt (int): The amount of attempts made.
     """
     data = {
         'unique_key': unique_key,
@@ -97,12 +98,13 @@ def get_call_push_payload(unique_key, phonenumber, caller_id):
     return payload
 
 
-def get_message_push_payload(message):
+def get_message_push_payload(message, attempt):
     """
     Function to create a dict used in the message push notification.
 
     Args:
         message (string): The message send in the notification.
+        attempt (int): The amount of attempts made
 
     Returns:
         dict: A dictionary with the following keys:
@@ -112,6 +114,7 @@ def get_message_push_payload(message):
     payload = {
         'type': TYPE_MESSAGE,
         'message': message,
+        'attempt': attempt,
     }
     return payload
 
@@ -128,7 +131,7 @@ def send_apns_message(device, app, message_type, data=None):
         message = Message(token_list, payload=get_call_push_payload(unique_key, data['phonenumber'],
                                                                     data['caller_id']))
     elif message_type == TYPE_MESSAGE:
-        message = Message(token_list, payload=get_message_push_payload(data['message']))
+        message = Message(token_list, payload=get_message_push_payload(data['message'], data['attempt']))
     else:
         logger.warning('{0} | TRYING TO SENT MESSAGE OF UNKNOWN TYPE: {1}', unique_key, message_type)
 
@@ -188,7 +191,7 @@ def send_fcm_message(device, app, message_type, data=None):
             data['caller_id'],
         )
     elif message_type == TYPE_MESSAGE:
-        message = get_message_push_payload(data['message'])
+        message = get_message_push_payload(data['message'], data['attempt'])
     else:
         logger.warning('{0} | Trying to sent message of unknown type: {1}'.format(unique_key, message_type))
 
@@ -236,7 +239,7 @@ def send_gcm_message(device, app, message_type, data=None):
             data['caller_id'],
         )
     elif message_type == TYPE_MESSAGE:
-        message = get_message_push_payload(data['message'])
+        message = get_message_push_payload(data['message'], data['attempt'])
     else:
         logger.warning('{0} | Trying to sent message of unknown type: {1}'.format(unique_key, message_type))
 
