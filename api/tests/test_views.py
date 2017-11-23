@@ -27,6 +27,7 @@ class RegisterDeviceTest(TestCase):
             'os_version': '8.3',
             'client_version': '1.0',
             'app': 'com.voipgrid.vialer',
+            'remote_logging_id': 'a1b2c3d4e5',
         }
 
         self.ios_url = '/api/apns-device/'

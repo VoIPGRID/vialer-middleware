@@ -18,6 +18,7 @@ class App(models.Model):
     app_id = models.CharField(max_length=255)
 
     push_key = models.CharField(max_length=255)
+    logentries_token = models.CharField(max_length=255, blank=False, null=False, default='')
 
     def __str__(self):
         return '{0} for {1}'.format(self.app_id, self.platform)
@@ -38,6 +39,7 @@ class Device(models.Model):
     sandbox = models.BooleanField(default=False)
     last_seen = models.DateTimeField(blank=True, null=True)
     app = models.ForeignKey(App)
+    remote_logging_id = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return '{0} - {1}'.format(self.sip_user_id, self.name)

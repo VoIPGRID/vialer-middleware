@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'app',
     'api',
     'django_nose',
+    'django_extensions',
 )
 
 MIDDLEWARE_CLASSES = (
