@@ -29,6 +29,7 @@ def send_call_message(device, unique_key, phonenumber, caller_id, attempt):
         unique_key (string): String with the unique_key.
         phonenumber (string): Phonenumber that is calling.
         caller_id (string): ID of the caller.
+        attempt (int): The amount of attempts made.
     """
     data = {
         'unique_key': unique_key,
@@ -66,7 +67,7 @@ def send_text_message(device, app, message):
             app.platform, device.token))
 
 
-def get_call_push_payload(unique_key, phonenumber, caller_id):
+def get_call_push_payload(unique_key, phonenumber, caller_id, attempt):
     """
     Function to create a dict used in the call push notification.
 
@@ -74,6 +75,7 @@ def get_call_push_payload(unique_key, phonenumber, caller_id):
         unique_key (string): The unique_key for the call.
         phonenumber (string): The phonenumber that is calling.
         caller_id (string): ID of the caller.
+        attempt (int): The amount of attempts made.
 
     Returns:
         dict: A dictionary with the following keys:
@@ -93,6 +95,7 @@ def get_call_push_payload(unique_key, phonenumber, caller_id):
         'caller_id': caller_id,
         'response_api': response_url,
         'message_start_time': time(),
+        'attempt': attempt,
     }
     return payload
 
@@ -125,8 +128,12 @@ def send_apns_message(device, app, message_type, data=None):
 
     if message_type == TYPE_CALL:
         unique_key = data['unique_key']
-        message = Message(token_list, payload=get_call_push_payload(unique_key, data['phonenumber'],
-                                                                    data['caller_id']))
+        message = Message(token_list, payload=get_call_push_payload(
+            unique_key,
+            data['phonenumber'],
+            data['caller_id'],
+            data['attempt'],
+        ))
     elif message_type == TYPE_MESSAGE:
         message = Message(token_list, payload=get_message_push_payload(data['message']))
     else:
@@ -186,6 +193,7 @@ def send_fcm_message(device, app, message_type, data=None):
             unique_key,
             data['phonenumber'],
             data['caller_id'],
+            data['attempt'],
         )
     elif message_type == TYPE_MESSAGE:
         message = get_message_push_payload(data['message'])
@@ -234,6 +242,7 @@ def send_gcm_message(device, app, message_type, data=None):
             unique_key,
             data['phonenumber'],
             data['caller_id'],
+            data['attempt'],
         )
     elif message_type == TYPE_MESSAGE:
         message = get_message_push_payload(data['message'])
