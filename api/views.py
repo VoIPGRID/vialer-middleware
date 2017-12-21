@@ -30,8 +30,11 @@ from .serializers import (
     CallResponseSerializer,
     DeleteDeviceSerializer,
     DeviceSerializer,
+    HangupReasonSerializer,
     IncomingCallSerializer,
 )
+
+logger = logging.getLogger('django')
 
 
 class VialerAPIView(views.APIView):
@@ -450,3 +453,48 @@ class DeviceView(VialerAPIView):
             device=device,
         )
         return Response('', status=HTTP_200_OK)
+
+
+class HangupReasonView(VialerAPIView):
+    """
+    View to log a reason why a device did not answer a call.
+    """
+    serializer_class = HangupReasonSerializer
+    authentication_classes = (VoipgridAuthentication, )
+
+    def post(self, request):
+        """
+        Function to log the reason for a device.
+        """
+        serialized_data = self._serialize_request(request)
+
+        reason = serialized_data['reason']
+        unique_key = serialized_data['unique_key']
+        sip_user_id = serialized_data['sip_user_id']
+
+        try:
+            # Check if there is a registered device for given sip_user_id.
+            device = get_object_or_404(Device, sip_user_id=sip_user_id)
+        except Http404:
+            log_middleware_information(
+                '{0} | Failed to find a device for SIP_user_ID : {1}',
+                OrderedDict([
+                    ('unique_key', unique_key),
+                    (LOG_SIP_USER_ID, sip_user_id),
+                ]),
+                logging.WARNING,
+            )
+            raise
+
+        log_middleware_information(
+            '{0} | {1} Device not available because: {2} on {3}',
+            OrderedDict([
+                ('unique_key', unique_key),
+                ('platform', device.app.platform.upper()),
+                ('reason', reason),
+                ('timestamp', datetime.datetime.fromtimestamp(time.time()).strftime('%H:%M:%S.%f')),
+            ]),
+            logging.INFO,
+            device=device,
+        )
+        return Response(status=HTTP_200_OK)

@@ -75,6 +75,15 @@ This endpoint requires authentication through HTTP Basic auth.
  * **token (string)**: Push token of the device to delete (required).
  * **app (string)**: App identifier like `com.voipgrid.vialer` of the device to delete (required).
 
+### /api/hangup-reason/
+Endpoint for posting a reason why a device did not answer a call.
+
+This endpoint requires authentication through HTTP Basic auth.
+
+ * **sip_user_id (int)**: Account id of the voip account to register (required).
+ * **unique_key (string)**: Key that was given in the device push message as reference (required).
+ * **reason (string)**: The reason why a call was not answered (required).
+
 ## Production setup
 A suggestion about how to run this project in production:
 

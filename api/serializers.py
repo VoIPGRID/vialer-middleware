@@ -52,3 +52,8 @@ class IncomingCallSerializer(SipUserIdSerializer):
     caller_id = serializers.CharField(max_length=255, default='', allow_blank=True)
     phonenumber = serializers.CharField(max_length=32, validators=[phone_number_validator])
     call_id = serializers.CharField(max_length=255, default=None, allow_blank=True)
+
+
+class HangupReasonSerializer(SipUserIdSerializer):
+    unique_key = serializers.CharField(max_length=255)
+    reason = serializers.CharField(max_length=None, default=None, allow_blank=True)
