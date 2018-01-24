@@ -26,6 +26,7 @@ class DeviceSerializer(TokenSerializer, SipUserIdSerializer):
     client_version = serializers.CharField(max_length=255, allow_blank=True, required=False)
     app = serializers.CharField(max_length=255)
     sandbox = serializers.BooleanField(default=False)
+    remote_logging_id = serializers.CharField(max_length=255, allow_blank=True, required=False)
 
 
 class DeleteDeviceSerializer(TokenSerializer, SipUserIdSerializer):
