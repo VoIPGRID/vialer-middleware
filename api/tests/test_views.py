@@ -5,7 +5,9 @@ from unittest import mock
 from django.conf import settings
 from django.core.cache import cache
 from django.test import TestCase, TransactionTestCase
+from freezegun import freeze_time
 from rest_framework.test import APIClient
+from testfixtures import LogCapture
 
 from app.models import App, Device, ResponseLog
 
@@ -584,3 +586,67 @@ class AndroidIncomingCallTest(TransactionTestCase):
 
         # Check if there is a log entry.
         self.assertGreater(log_count, 0)
+
+
+class HangupReasonTest(TestCase):
+    def setUp(self):
+        """
+        Initialize the data we need for the tests.
+        """
+        super(HangupReasonTest, self).setUp()
+        self.client = APIClient()
+
+        self.ios_app, created = App.objects.get_or_create(platform='apns', app_id='com.voipgrid.vialer')
+        Device.objects.create(
+            name='test device',
+            token='a652aee84bdec6c2859eec89a6e5b1a42c400fba43070f404148f27b502610b6',
+            sip_user_id='123456789',
+            os_version='8.3',
+            client_version='1.0',
+            app=self.ios_app
+        )
+        self.data = {
+            'sip_user_id': '123456789',
+            'unique_key': 'sduiqayduiryqwuioeryqwer76789',
+        }
+
+        self.hangup_reason_url = '/api/hangup-reason/'
+
+    @freeze_time('2018-01-01 12:00:00.133700')
+    def test_if_the_reason_is_logged_correctly(self):
+        """
+        Test if the reason is logged correctly when doing a correct call.
+        """
+        self.data['reason'] = 'Device did not now answer'
+        with LogCapture() as log:
+            self.client.post(self.hangup_reason_url, self.data)
+        log.check(
+            (
+                'django',
+                'INFO',
+                'sduiqayduiryqwuioeryqwer76789 | APNS Device not available because: '
+                'Device did not now answer on 12:00:00.133700'
+            ),
+        )
+
+    def test_incorrect_sip_user_id_log(self):
+        """
+        Test if the warning message is logged when a wrong sip user id is given.
+        """
+        self.data['reason'] = 'Device did not now answer'
+        self.data['sip_user_id'] = '987654321'
+        with LogCapture() as log:
+            self.client.post(self.hangup_reason_url, self.data)
+        log.check(
+            (
+                'django',
+                'WARNING',
+                'sduiqayduiryqwuioeryqwer76789 | Failed to find a device'
+                ' for SIP_user_ID : 987654321',
+            ),
+            (
+                'django.request',
+                'WARNING',
+                'Not Found: /api/hangup-reason/',
+            ),
+        )
