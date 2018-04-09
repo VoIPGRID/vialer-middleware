@@ -16,6 +16,8 @@ LOG_NONCE = 'nonce'
 LOG_USERNAME = 'username'
 LOG_EMAIL = 'email'
 
+django_logger = logging.getLogger('django')
+
 
 def get_metrics(start_date, end_date, platform):
     """
@@ -80,7 +82,7 @@ def get_metrics(start_date, end_date, platform):
 
 def log_middleware_information(log_statement, dict_with_variables, log_level, device=None):
     """
-    Function that logs information either to Logentries or the django logger.
+    Function that handles the logging for the middleware.
 
     Args:
         log_statement (str): The message to log.
@@ -91,27 +93,47 @@ def log_middleware_information(log_statement, dict_with_variables, log_level, de
             2: warning
             3: exception
             4: error
-        device (Device): The device for which we can log to Logentries.
+        device (Device): The device for which we want to log to Logentries.
     """
-    log = logging.getLogger('django')
-    remote_logging_id = 'No logging ID'
+    remote_logging_id = device.remote_logging_id if device and device.remote_logging_id else 'No remote logging ID'
+    django_log_statement = fill_log_statement(log_statement, dict_with_variables)
+    django_logger.log(log_level, '{0} - middleware - {1}'.format(remote_logging_id, django_log_statement))
 
     if device and device.remote_logging_id:
-        logentries_handler = LogentriesHandler(device.app.logentries_token)
-        remote_logging_id = device.remote_logging_id
+        log_statement = fill_log_statement(log_statement, dict_with_variables, anonymize=True)
+        logentries_token = device.app.logentries_token
+        log_to_logentries(log_statement, log_level, logentries_token, device, remote_logging_id)
+        if device.app.partner_logentries_token:
+            # Log to the Logentries environment of the partner with a different token.
+            logentries_token = device.app.partner_logentries_token
+            log_to_logentries(log_statement, log_level, logentries_token, device, remote_logging_id)
 
-        if not logentries_handler.good_config:
-            log.error('The logentries token is invalid - {0}'.format(device.app.app_id))
-        else:
-            log = logging.getLogger('logentries')
-            log.addHandler(logentries_handler)
-            log_statement = fill_log_statement(log_statement, dict_with_variables, anonymize=True)
+
+def log_to_logentries(log_statement, log_level, logentries_token, device, remote_logging_id):
+    """
+    Function that logs information to Logentries.
+
+    Args:
+        log_statement (str): The message to log.
+        log_level (int): The level on which to log.
+            1: info
+            2: warning
+            3: exception
+            4: error
+        logentries_token (str): The token of the logset in Logentries.
+        device (Device): The device for which we want to log to Logentries.
+        remote_logging_id (str): The remote logging id of the device.
+    """
+    logentries_handler = LogentriesHandler(logentries_token)
+
+    if logentries_handler.good_config:
+        logentries_logger = logging.getLogger('logentries')
+        logentries_logger.addHandler(logentries_handler)
+        logentries_logger.setLevel(logging.INFO)
+        logentries_logger.log(log_level, '{0} - middleware - {1}'.format(remote_logging_id, log_statement))
     else:
-        log_statement = fill_log_statement(log_statement, dict_with_variables)
-
-    if not log_level:
-        raise Exception('No log level supplied')
-    log.log(log_level, '{0} - middleware - {1}'.format(remote_logging_id, log_statement))
+        log_statement = 'The logentries token is invalid - {0}'.format(device.app.app_id)
+        django_logger.log(log_level, '{0} - middleware - {1}'.format(remote_logging_id, log_statement))
 
 
 def fill_log_statement(log_statement, dict_with_variables, anonymize=False):

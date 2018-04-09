@@ -25,7 +25,7 @@ check_up() {
     done
 }
 
-check_up "DB Server" ${DB_PORT_3306_TCP_ADDR} 4040
+check_up "DB Server" ${DB_PORT_3306_TCP_ADDR} ${DB_ENV_PORT}
 echo "DB server up and running."
 
 # Setup DB
