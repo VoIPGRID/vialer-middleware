@@ -624,7 +624,7 @@ class HangupReasonTest(TestCase):
             (
                 'django',
                 'INFO',
-                'No logging ID - middleware - sduiqayduiryqwuioeryqwer76789 | APNS Device '
+                'No remote logging ID - middleware - sduiqayduiryqwuioeryqwer76789 | APNS Device '
                 'not available because: Device did not now answer on 12:00:00.133700',
             ),
         )
@@ -641,7 +641,7 @@ class HangupReasonTest(TestCase):
             (
                 'django',
                 'WARNING',
-                'No logging ID - middleware - sduiqayduiryqwuioeryqwer76789 | Failed to '
+                'No remote logging ID - middleware - sduiqayduiryqwuioeryqwer76789 | Failed to '
                 'find a device for SIP_user_ID : 987654321',
             ),
             (

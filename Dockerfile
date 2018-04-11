@@ -1,7 +1,7 @@
 FROM python:3.4
 ENV PYTHONUNBUFFERED 1
 
-RUN apt-get update && apt-get install -y -y \
+RUN apt-get update && apt-get install -y \
 		gcc \
 		gettext \
 		mysql-client libmysqlclient-dev \

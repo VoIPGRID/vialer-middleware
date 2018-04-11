@@ -19,6 +19,7 @@ class App(models.Model):
 
     push_key = models.CharField(max_length=255)
     logentries_token = models.CharField(max_length=255, blank=False, null=False, default='')
+    partner_logentries_token = models.CharField(max_length=255, blank=True, null=True, default='')
 
     def __str__(self):
         return '{0} for {1}'.format(self.app_id, self.platform)
