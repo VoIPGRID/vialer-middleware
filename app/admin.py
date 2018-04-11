@@ -4,7 +4,7 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.shortcuts import render
 
-from .models import App, Device, ResponseLog, APNS_PLATFORM, GCM_PLATFORM, ANDROID_PLATFORM
+from .models import ANDROID_PLATFORM, APNS_PLATFORM, App, Device, GCM_PLATFORM, ResponseLog
 from .utils import get_metrics
 
 
@@ -67,7 +67,7 @@ class ResponseLogAdmin(admin.ModelAdmin):
                 get_metrics(start_date, end_date, APNS_PLATFORM),
                 get_metrics(start_date, end_date, GCM_PLATFORM),
                 get_metrics(start_date, end_date, ANDROID_PLATFORM),
-            ]
+            ],
         }
 
         return render(request, 'app/metrics.html', context=context)

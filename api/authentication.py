@@ -9,7 +9,7 @@ from rest_framework.exceptions import (AuthenticationFailed, NotAuthenticated,
                                        ParseError, PermissionDenied)
 
 from app.models import Device
-from app.utils import log_middleware_information, LOG_EMAIL
+from app.utils import LOG_EMAIL, log_middleware_information
 
 from .exceptions import UnavailableException
 from .serializers import SipUserIdSerializer
