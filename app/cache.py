@@ -15,7 +15,7 @@ class RedisClusterCache(object):
         """
         Function to connect to the redis cluster and init the client.
         """
-        server_list = settings.REDIS_SERVER_LIST.replace(" ", "").split(',')
+        server_list = settings.REDIS_SERVER_LIST.replace(' ', '').split(',')
 
         nodes = []
         for server in server_list:

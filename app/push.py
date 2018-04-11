@@ -5,9 +5,8 @@ import os
 from time import time
 from urllib.parse import urljoin
 
-from django.conf import settings
-
 from apns_clerk import APNs, Message, Session
+from django.conf import settings
 from gcm.gcm import GCM, GCMAuthenticationException
 from pyfcm import FCMNotification
 from pyfcm.errors import AuthenticationError, FCMServerError, InternalPackageError
@@ -343,10 +342,10 @@ def send_gcm_message(device, app, message_type, data=None):
     """
     Send a Google Cloud Messaging message.
     """
-    token_list = [device.token, ]
+    token_list = [device.token]
     unique_key = device.token
 
-    key = "%d-cycle.key" % int(time())
+    key = '%d-cycle.key' % int(time())
     if message_type == TYPE_CALL:
         unique_key = data['unique_key']
         message = get_call_push_payload(
