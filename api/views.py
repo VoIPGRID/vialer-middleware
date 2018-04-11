@@ -166,7 +166,7 @@ class IncomingCallView(VialerAPIView):
                     (LOG_CALLER_ID, caller_id),
                 ]),
                 logging.INFO,
-                device=device,
+                device=device
             )
 
             attempt = 1

@@ -126,13 +126,13 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(levelname)s {0} %(asctime)s %(message)s'.format(LOG_SOURCE),
+            'format': '%(levelname)s {0} %(asctime)s %(message)s'.format(LOG_SOURCE)
         },
     },
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse',
-        },
+        }
     },
     'handlers': {
         'sentry': {
@@ -172,7 +172,7 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_ENV_PASSWORD', 'dev1234'),
         'HOST': os.environ.get('DB_ENV_HOST', 'db'),
         'PORT': os.environ.get('DB_ENV_PORT', '4040'),
-    },
+    }
 }
 
 # VG stands for VoIPGRID. This is the platform that handles all the sip

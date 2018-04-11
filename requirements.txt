@@ -31,12 +31,3 @@ raven==6.1.0
 
 # Logging to Logentries
 logentries==0.17
-
-# The modular source code checker: pep8, pyflakes and co
-flake8==3.4.1
-flake8-commas==1.0.0
-flake8-docstrings==1.1.0
-flake8-import-order==0.13
-# Custom plugin to disallow app imports and relative imports to be in the same block.
-git+https://github.com/wearespindle/flake8-import-order-spindle@v0.1#egg=flake8-import-order-spindle
-flake8-quotes==0.13.0

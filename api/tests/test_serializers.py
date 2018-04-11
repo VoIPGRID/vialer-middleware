@@ -2,13 +2,9 @@ import time
 
 from django.test import TestCase
 
-from ..serializers import (
-    CallResponseSerializer,
-    DeviceSerializer,
-    IncomingCallSerializer,
-    SipUserIdSerializer,
-    TokenSerializer,
-)
+from ..serializers import (CallResponseSerializer, IncomingCallSerializer,
+                           DeviceSerializer, SipUserIdSerializer,
+                           TokenSerializer)
 
 
 class TestTokenSerializer(TestCase):
