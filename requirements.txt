@@ -31,3 +31,6 @@ raven==6.1.0
 
 # Logging to Logentries
 logentries==0.17
+
+# Send metrics to prometheus
+prometheus_client==0.2.0
