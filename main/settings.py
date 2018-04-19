@@ -189,3 +189,5 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 RAVEN_CONFIG = {
     'dsn': os.environ.get('SENTRY_DSN', None),
 }
+
+PROMETHEUS_PORT = os.environ.get('PROMETHEUS_PORT', '9000')
