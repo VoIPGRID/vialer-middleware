@@ -161,6 +161,10 @@ LOGGING = {
             'handlers': ['console', 'file', 'mail_admins'],
             'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
         },
+        'logentries': {
+            'handlers': [],
+            'level': 'INFO',
+        },
     },
 }
 
@@ -191,3 +195,8 @@ RAVEN_CONFIG = {
 }
 
 PROMETHEUS_PORT = os.environ.get('PROMETHEUS_PORT', '9000')
+
+try:
+    from .local import *
+except ImportError:
+    pass
