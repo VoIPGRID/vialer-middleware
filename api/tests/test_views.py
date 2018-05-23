@@ -38,7 +38,8 @@ class RegisterDeviceTest(TestCase):
     @mock.patch('app.push.send_apns_message', side_effect=mocked_send_apns_message)
     def test_register_apns_device(self, *mocks):
         """
-        This tests more than its name suggests. It also tests, unregister, token update, sip_id update etc!
+        This tests more than its name suggests. It also tests, unregister,
+        token update, sip_id update etc!
         """
         # New APNS registration.
         response = self.client.post(self.ios_url, self.data)
@@ -195,7 +196,7 @@ class IOSIncomingCallTest(TransactionTestCase):
             os_version='8.3',
             client_version='1.0',
             last_seen=two_weeks_ago,
-            app=self.ios_app
+            app=self.ios_app,
         )
         call_data['call_id'] = 'sduiqayduiryqwuioeryqwer76789'
 
@@ -239,7 +240,7 @@ class IOSIncomingCallTest(TransactionTestCase):
             os_version='8.3',
             client_version='1.0',
             last_seen=two_weeks_ago,
-            app=self.ios_app
+            app=self.ios_app,
         )
         call_data['call_id'] = 'sduiqayduiryqwuioeryqwer76789'
 
@@ -284,7 +285,7 @@ class IOSIncomingCallTest(TransactionTestCase):
             os_version='8.3',
             client_version='1.0',
             last_seen=two_weeks_ago,
-            app=self.ios_app
+            app=self.ios_app,
         )
         call_data['call_id'] = 'sduiqayduiryqwuioeryqwer76789'
 
@@ -335,7 +336,7 @@ class IOSIncomingCallTest(TransactionTestCase):
             os_version='8.3',
             client_version='1.0',
             last_seen=two_weeks_ago,
-            app=self.ios_app
+            app=self.ios_app,
         )
         call_data['call_id'] = 'sduiqayduiryqwuioeryqwer76789'
 
@@ -603,7 +604,7 @@ class HangupReasonTest(TestCase):
             sip_user_id='123456789',
             os_version='8.3',
             client_version='1.0',
-            app=self.ios_app
+            app=self.ios_app,
         )
         self.data = {
             'sip_user_id': '123456789',
@@ -615,7 +616,8 @@ class HangupReasonTest(TestCase):
     @freeze_time('2018-01-01 12:00:00.133700')
     def test_if_the_reason_is_logged_correctly(self):
         """
-        Test if the reason is logged correctly when doing a correct call.
+        Test if the reason is logged correctly when doing a correct
+        call.
         """
         self.data['reason'] = 'Device did not now answer'
         with LogCapture() as log:
@@ -624,8 +626,8 @@ class HangupReasonTest(TestCase):
             (
                 'django',
                 'INFO',
-                'No remote logging ID - middleware - sduiqayduiryqwuioeryqwer76789 | APNS Device '
-                'not available because: Device did not now answer on 12:00:00.133700',
+                ('No remote logging ID - middleware - sduiqayduiryqwuioeryqwer76789 | APNS Device '
+                 'not available because: Device did not now answer on 12:00:00.133700'),
             ),
         )
 
@@ -641,8 +643,8 @@ class HangupReasonTest(TestCase):
             (
                 'django',
                 'WARNING',
-                'No remote logging ID - middleware - sduiqayduiryqwuioeryqwer76789 | Failed to '
-                'find a device for SIP_user_ID : 987654321',
+                ('No remote logging ID - middleware - sduiqayduiryqwuioeryqwer76789 | Failed to '
+                 'find a device for SIP_user_ID : 987654321'),
             ),
             (
                 'django.request',

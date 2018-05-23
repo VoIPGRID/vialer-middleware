@@ -6,7 +6,7 @@ from django.conf import settings
 from django.test import TransactionTestCase
 from rest_framework.test import APIClient
 
-from app.models import Device, App
+from app.models import App, Device
 
 from .utils import mocked_send_apns_message, ThreadWithReturn
 
@@ -27,7 +27,7 @@ class IncomingCallPerformanceTest(TransactionTestCase):
             os_version='8.3',
             client_version='1.0',
             last_seen=two_weeks_ago,
-            app=self.ios_app
+            app=self.ios_app,
         )
 
     @mock.patch('app.push.send_apns_message', side_effect=mocked_send_apns_message)
