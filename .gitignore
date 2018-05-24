@@ -8,6 +8,7 @@
 /mysql
 coverage.xml
 xunit.xml
+/main/local.py
 
 # To avoid conflicts between dev en live yml.
 production.yml

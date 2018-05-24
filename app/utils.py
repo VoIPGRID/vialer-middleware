@@ -89,10 +89,6 @@ def log_middleware_information(log_statement, dict_with_variables, log_level, de
         dict_with_variables (OrderedDict): OrderedDict that contains the
             variables we want to insert into the logging statement.
         log_level (int): The level on which to log.
-            1: info
-            2: warning
-            3: exception
-            4: error
         device (Device): The device for which we want to log to Logentries.
     """
     remote_logging_id = device.remote_logging_id if device and device.remote_logging_id else 'No remote logging ID'
@@ -116,10 +112,6 @@ def log_to_logentries(log_statement, log_level, logentries_token, device, remote
     Args:
         log_statement (str): The message to log.
         log_level (int): The level on which to log.
-            1: info
-            2: warning
-            3: exception
-            4: error
         logentries_token (str): The token of the logset in Logentries.
         device (Device): The device for which we want to log to Logentries.
         remote_logging_id (str): The remote logging id of the device.
@@ -128,8 +120,7 @@ def log_to_logentries(log_statement, log_level, logentries_token, device, remote
 
     if logentries_handler.good_config:
         logentries_logger = logging.getLogger('logentries')
-        logentries_logger.addHandler(logentries_handler)
-        logentries_logger.setLevel(logging.INFO)
+        logentries_logger.handlers = [logentries_handler]
         logentries_logger.log(log_level, '{0} - middleware - {1}'.format(remote_logging_id, log_statement))
     else:
         log_statement = 'The logentries token is invalid - {0}'.format(device.app.app_id)
