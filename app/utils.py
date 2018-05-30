@@ -16,6 +16,8 @@ LOG_NONCE = 'nonce'
 LOG_USERNAME = 'username'
 LOG_EMAIL = 'email'
 
+LOGENTRIES_HANDLERS = {}
+
 django_logger = logging.getLogger('django')
 
 
@@ -116,13 +118,15 @@ def log_to_logentries(log_statement, log_level, logentries_token, device, remote
         device (Device): The device for which we want to log to Logentries.
         remote_logging_id (str): The remote logging id of the device.
     """
-    logentries_handler = LogentriesHandler(logentries_token)
+    if logentries_token not in LOGENTRIES_HANDLERS:
+        LOGENTRIES_HANDLERS[logentries_token] = LogentriesHandler(logentries_token)
 
-    if logentries_handler.good_config:
+    if LOGENTRIES_HANDLERS[logentries_token].good_config:
         logentries_logger = logging.getLogger('logentries')
-        logentries_logger.handlers = [logentries_handler]
+        logentries_logger.handlers = [LOGENTRIES_HANDLERS[logentries_token]]
         logentries_logger.log(log_level, '{0} - middleware - {1}'.format(remote_logging_id, log_statement))
     else:
+        LOGENTRIES_HANDLERS.pop(logentries_token)
         log_statement = 'The logentries token is invalid - {0}'.format(device.app.app_id)
         django_logger.log(log_level, '{0} - middleware - {1}'.format(remote_logging_id, log_statement))
 
