@@ -84,6 +84,31 @@ This endpoint requires authentication through HTTP Basic auth.
  * **unique_key (string)**: Key that was given in the device push message as reference (required).
  * **reason (string)**: The reason why a call was not answered (required).
 
+### /api/log-metrics/
+Endpoint to post metric data which can be used by prometheus.
+
+This endpoint requires authentication through HTTP Basic auth.
+
+ * **sip_user_id (int)**: Account id of the voip account to register (required).
+ * **os (str)**: The OS of the app (optional).
+ * **os_version (str)**: The version of the OS of the app (optional).
+ * **app_version (str)**: The version of the app (optional).
+ * **app_status (str)**: The status of the app (optional).
+ * **middleware_unique_key (str)**: The unique key of the call in the middleware (optional).
+ * **bluetooth_audio (str)**: Did the app use bluetooth audio (optional).
+ * **bluetooth_device (str)**: Details of the bluetooth device (optional).
+ * **network (str)**: The network that was used for the call (optional).
+ * **network_operator (str)**: The operator of the network if WiFi was not used (optional).
+ * **network_signal_strength (str)**: The strength of the network (optional).
+ * **direction (str)**: Incoming or outgoing call (optional).
+ * **connection_type (str)**: The type of the connection (optional).
+ * **call_setup_successful (str)**: Check if the call was setup successfully (optional).
+ * **client_country (str)**: The country of the client (optional).
+ * **call_id (str)**: The asterisk call id (optional).
+ * **log_id (str)**: The logentries id (optional).
+ * **time_to_initial_response (str)**: Time to first response in milliseconds (optional).
+ * **failed_reason (str)**: The reason why a call failed (optional).
+
 ## Production setup
 A suggestion about how to run this project in production:
 

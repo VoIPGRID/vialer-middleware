@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.status import (HTTP_200_OK, HTTP_201_CREATED,
                                    HTTP_202_ACCEPTED, HTTP_404_NOT_FOUND)
 
+from api.utils import get_metrics_base_data
 from app.cache import RedisClusterCache
 from app.models import App, Device
 from app.tasks import log_to_db, task_incoming_call_notify, task_notify_old_token
@@ -22,6 +23,16 @@ from app.utils import (
     LOG_CALLER_ID,
     log_middleware_information,
     LOG_SIP_USER_ID,
+)
+from main.prometheus import (
+    CALL_SETUP_SUCCESSFUL_KEY,
+    DIRECTION_KEY,
+    FAILED_REASON_KEY,
+    OS_KEY,
+    VIALER_CALL_FAILURE_TOTAL_KEY,
+    VIALER_CALL_SUCCESS_TOTAL_KEY,
+    VIALER_HANGUP_REASON_TOTAL_KEY,
+    VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL_KEY,
 )
 
 from .authentication import VoipgridAuthentication
@@ -236,6 +247,25 @@ class IncomingCallView(VialerAPIView):
                         logging.INFO,
                         device=device,
                     )
+
+                    # Push data to Redis so we are able to increment our counter.
+                    redis_cache.client.rpush(
+                        VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL_KEY,
+                        {
+                            OS_KEY: device.app.platform,
+                            DIRECTION_KEY: 'Incoming',
+                            FAILED_REASON_KEY: 'Unable to get response from phone',
+                        }
+                    )
+
+                    # Log to the metrics file.
+                    metrics_logger = logging.getLogger('metrics')
+                    metrics_logger.info({
+                        OS_KEY: device.app.platform,
+                        CALL_SETUP_SUCCESSFUL_KEY: 'false',
+                        FAILED_REASON_KEY: 'Device did not respond in time',
+                    })
+
                     # App is not available.
                     return Response('status=NAK')
                 else:
@@ -498,4 +528,32 @@ class HangupReasonView(VialerAPIView):
             logging.INFO,
             device=device,
         )
+        return Response(status=HTTP_200_OK)
+
+
+class LogMetricsView(VialerAPIView):
+    serializer_class = None
+    authentication_classes = (VoipgridAuthentication,)
+
+    def post(self, request):
+        metrics_logger = logging.getLogger('metrics')
+        redis_cache = RedisClusterCache()
+        json_data = request.data
+
+        if CALL_SETUP_SUCCESSFUL_KEY in json_data:
+            if json_data.get(CALL_SETUP_SUCCESSFUL_KEY) == 'true':
+                metric_data = get_metrics_base_data(json_data)
+                redis_cache.client.rpush(VIALER_CALL_SUCCESS_TOTAL_KEY, metric_data)
+
+            elif json_data.get(CALL_SETUP_SUCCESSFUL_KEY) == 'false':
+                metric_data = get_metrics_base_data(json_data)
+                metric_data[FAILED_REASON_KEY] = json_data.get(FAILED_REASON_KEY)
+                redis_cache.client.rpush(VIALER_CALL_FAILURE_TOTAL_KEY, metric_data)
+
+            elif json_data.get(CALL_SETUP_SUCCESSFUL_KEY) == 'declined':
+                metric_data = get_metrics_base_data(json_data)
+                metric_data[FAILED_REASON_KEY] = json_data.get(FAILED_REASON_KEY)
+                redis_cache.client.rpush(VIALER_HANGUP_REASON_TOTAL_KEY, metric_data)
+
+        metrics_logger.info(json_data)
         return Response(status=HTTP_200_OK)

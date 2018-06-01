@@ -149,6 +149,11 @@ LOGGING = {
             'formatter': 'verbose',
             'filename': os.path.join(LOGGING_DIR, 'middleware.log'),
         },
+        'metrics_file': {
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': os.path.join(LOGGING_DIR, 'metrics.log'),
+        },
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
@@ -164,6 +169,10 @@ LOGGING = {
         'logentries': {
             'handlers': [],
             'level': 'INFO',
+        },
+        'metrics': {
+            'handlers': ['metrics_file'],
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
         },
     },
 }
