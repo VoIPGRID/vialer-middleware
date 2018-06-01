@@ -307,9 +307,10 @@ class CallResponseView(VialerAPIView):
         roundtrip = time.time() - float(message_start_time)
 
         log_middleware_information(
-            '{0} | Device responded. Message round trip-time: {1} sec',
+            '{0} | Device responded. Message start-time: {1} sec, round trip-time: {2} sec',
             OrderedDict([
                 ('unique_key', unique_key),
+                ('starttime', datetime.datetime.fromtimestamp(message_start_time)),
                 ('roundtrip', roundtrip),
             ]),
             logging.INFO,
