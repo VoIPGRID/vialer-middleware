@@ -1,3 +1,4 @@
+from ast import literal_eval
 from datetime import datetime, timedelta
 import time
 from unittest import mock
@@ -9,7 +10,10 @@ from freezegun import freeze_time
 from rest_framework.test import APIClient
 from testfixtures import LogCapture
 
+from app.cache import RedisClusterCache
 from app.models import App, Device, ResponseLog
+from main.prometheus import OS_KEY, OS_VERSION_KEY, APP_VERSION_KEY, NETWORK_KEY, CONNECTION_TYPE_KEY, DIRECTION_KEY, \
+    CALL_SETUP_SUCCESSFUL_KEY, FAILED_REASON_KEY
 
 from .utils import mocked_send_apns_message, mocked_send_fcm_message, ThreadWithReturn
 
@@ -652,3 +656,109 @@ class HangupReasonTest(TestCase):
                 'Not Found: /api/hangup-reason/',
             ),
         )
+
+
+class LogMetricsTest(TestCase):
+    def setUp(self):
+        """
+        Initialize the data we need for the tests.
+        """
+        super(LogMetricsTest, self).setUp()
+        self.client = APIClient()
+
+        self.ios_app, created = App.objects.get_or_create(platform='apns', app_id='com.voipgrid.vialer')
+        Device.objects.create(
+            name='test device',
+            token='a652aee84bdec6c2859eec89a6e5b1a42c400fba43070f404148f27b502610b6',
+            sip_user_id='123456789',
+            os_version='8.3',
+            client_version='1.0',
+            app=self.ios_app,
+        )
+        self.data = {
+            'sip_user_id': '123456789',
+        }
+        self.log_metrics_url = '/api/log-metrics/'
+        self.redis_client = RedisClusterCache()
+        self.success_redis_key = 'vialer_call_success_total'
+        self.failed_redis_key = 'vialer_call_failure_total'
+        self.hangup_redis_key = 'vialer_heangup_reason_total'
+
+    def tearDown(self):
+        super(LogMetricsTest, self).tearDown()
+        self.redis_client.client.delete(self.success_redis_key)
+        self.redis_client.client.delete(self.failed_redis_key)
+        self.redis_client.client.delete(self.hangup_redis_key)
+
+    def test_if_call_success_key_is_stored_in_redis_correctly(self):
+        """
+        Test if the data we send is stored with the call_success_key in Redis.
+        """
+        self.data[OS_KEY] = 'iOS'
+        self.data[OS_VERSION_KEY] = '5.0.1'
+        self.data[APP_VERSION_KEY] = '2.0'
+        self.data[NETWORK_KEY] = 'WiFi'
+        self.data[CONNECTION_TYPE_KEY] = 'TLS'
+        self.data[DIRECTION_KEY] = 'Incoming'
+        self.data[CALL_SETUP_SUCCESSFUL_KEY] = 'true'
+        response = self.client.post(self.log_metrics_url, self.data)
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(self.redis_client.client.llen(self.success_redis_key), 1)
+        value_list = self.redis_client.client.lrange(self.success_redis_key, 0, -1)
+        value_dict = literal_eval(value_list[0])
+        self.assertEquals(self.data[OS_KEY], value_dict[OS_KEY])
+        self.assertEquals(self.data[OS_VERSION_KEY], value_dict[OS_VERSION_KEY])
+        self.assertEquals(self.data[APP_VERSION_KEY], value_dict[APP_VERSION_KEY])
+        self.assertEquals(self.data[NETWORK_KEY], value_dict[NETWORK_KEY])
+        self.assertEquals(self.data[CONNECTION_TYPE_KEY], value_dict[CONNECTION_TYPE_KEY])
+        self.assertEquals(self.data[DIRECTION_KEY], value_dict[DIRECTION_KEY])
+
+    def test_if_call_failure_key_is_stored_in_redis_correctly(self):
+        """
+        Test if the data we send is stored with the call_failure_key in Redis.
+        """
+        self.data[OS_KEY] = 'iOS'
+        self.data[OS_VERSION_KEY] = '5.0.1'
+        self.data[APP_VERSION_KEY] = '2.0'
+        self.data[NETWORK_KEY] = 'WiFi'
+        self.data[CONNECTION_TYPE_KEY] = 'TLS'
+        self.data[DIRECTION_KEY] = 'Incoming'
+        self.data[CALL_SETUP_SUCCESSFUL_KEY] = 'false'
+        self.data[FAILED_REASON_KEY] = '70% packet loss'
+        response = self.client.post(self.log_metrics_url, self.data)
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(self.redis_client.client.llen(self.failed_redis_key), 1)
+        value_list = self.redis_client.client.lrange(self.failed_redis_key, 0, -1)
+        value_dict = literal_eval(value_list[0])
+        self.assertEquals(self.data[OS_KEY], value_dict[OS_KEY])
+        self.assertEquals(self.data[OS_VERSION_KEY], value_dict[OS_VERSION_KEY])
+        self.assertEquals(self.data[APP_VERSION_KEY], value_dict[APP_VERSION_KEY])
+        self.assertEquals(self.data[NETWORK_KEY], value_dict[NETWORK_KEY])
+        self.assertEquals(self.data[CONNECTION_TYPE_KEY], value_dict[CONNECTION_TYPE_KEY])
+        self.assertEquals(self.data[DIRECTION_KEY], value_dict[DIRECTION_KEY])
+        self.assertEquals(self.data[FAILED_REASON_KEY], value_dict[FAILED_REASON_KEY])
+
+    def test_if_call_hangup_key_is_stored_in_redis_correctly(self):
+        """
+        Test if the data we send is stored with the call_hangup_key in Redis.
+        """
+        self.data[OS_KEY] = 'iOS'
+        self.data[OS_VERSION_KEY] = '5.0.1'
+        self.data[APP_VERSION_KEY] = '2.0'
+        self.data[NETWORK_KEY] = 'WiFi'
+        self.data[CONNECTION_TYPE_KEY] = 'TLS'
+        self.data[DIRECTION_KEY] = 'Incoming'
+        self.data[CALL_SETUP_SUCCESSFUL_KEY] = 'declined'
+        self.data[FAILED_REASON_KEY] = 'Too much noise during the call'
+        response = self.client.post(self.log_metrics_url, self.data)
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(self.redis_client.client.llen(self.hangup_redis_key), 1)
+        value_list = self.redis_client.client.lrange(self.hangup_redis_key, 0, -1)
+        value_dict = literal_eval(value_list[0])
+        self.assertEquals(self.data[OS_KEY], value_dict[OS_KEY])
+        self.assertEquals(self.data[OS_VERSION_KEY], value_dict[OS_VERSION_KEY])
+        self.assertEquals(self.data[APP_VERSION_KEY], value_dict[APP_VERSION_KEY])
+        self.assertEquals(self.data[NETWORK_KEY], value_dict[NETWORK_KEY])
+        self.assertEquals(self.data[CONNECTION_TYPE_KEY], value_dict[CONNECTION_TYPE_KEY])
+        self.assertEquals(self.data[DIRECTION_KEY], value_dict[DIRECTION_KEY])
+        self.assertEquals(self.data[FAILED_REASON_KEY], value_dict[FAILED_REASON_KEY])
