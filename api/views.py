@@ -32,8 +32,9 @@ from main.prometheus import (
     VIALER_CALL_FAILURE_TOTAL_KEY,
     VIALER_CALL_SUCCESS_TOTAL_KEY,
     VIALER_HANGUP_REASON_TOTAL_KEY,
+    VIALER_MIDDLEWARE_INCOMING_VALUE,
     VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL_KEY,
-)
+    VIALER_MIDDLEWARE_PUSH_NOTIFICATION_SUCCESS_TOTAL_KEY)
 
 from .authentication import VoipgridAuthentication
 from .renderers import PlainTextRenderer
@@ -223,7 +224,6 @@ class IncomingCallView(VialerAPIView):
                 # Get on an empty key returns None so we need to check for
                 # True and False.
                 if available == 'True':
-
                     log_middleware_information(
                         '{0} | {1} Device checked in on time, sending ACK on {2}',
                         OrderedDict([
@@ -234,7 +234,25 @@ class IncomingCallView(VialerAPIView):
                         logging.INFO,
                         device=device,
                     )
-                    # Succes status for asterisk.
+
+                    # Push data to Redis for when a device successful
+                    # responded to the middleware.
+                    redis_cache.client.rpush(
+                        VIALER_MIDDLEWARE_PUSH_NOTIFICATION_SUCCESS_TOTAL_KEY,
+                        {
+                            OS_KEY: device.app.platform,
+                            DIRECTION_KEY: VIALER_MIDDLEWARE_INCOMING_VALUE,
+                        }
+                    )
+
+                    # Log to the metrics file.
+                    metrics_logger = logging.getLogger('metrics')
+                    metrics_logger.info({
+                        OS_KEY: device.app.platform,
+                        CALL_SETUP_SUCCESSFUL_KEY: 'true',
+                    })
+
+                    # Success status for asterisk.
                     return Response('status=ACK')
                 elif available == 'False':
                     log_middleware_information(
@@ -248,13 +266,14 @@ class IncomingCallView(VialerAPIView):
                         device=device,
                     )
 
-                    # Push data to Redis so we are able to increment our counter.
+                    # Push data to Redis for when a device responded as not
+                    # available to the middleware.
                     redis_cache.client.rpush(
                         VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL_KEY,
                         {
                             OS_KEY: device.app.platform,
-                            DIRECTION_KEY: 'Incoming',
-                            FAILED_REASON_KEY: 'Unable to get response from phone',
+                            DIRECTION_KEY: VIALER_MIDDLEWARE_INCOMING_VALUE,
+                            FAILED_REASON_KEY: 'Device not available',
                         }
                     )
 
@@ -263,7 +282,7 @@ class IncomingCallView(VialerAPIView):
                     metrics_logger.info({
                         OS_KEY: device.app.platform,
                         CALL_SETUP_SUCCESSFUL_KEY: 'false',
-                        FAILED_REASON_KEY: 'Device did not respond in time',
+                        FAILED_REASON_KEY: 'Device not available',
                     })
 
                     # App is not available.
@@ -294,6 +313,24 @@ class IncomingCallView(VialerAPIView):
                 logging.INFO,
                 device=device,
             )
+
+            # Push data to Redis for when a device has not responded to the middleware.
+            redis_cache.client.rpush(
+                VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL_KEY,
+                {
+                    OS_KEY: device.app.platform,
+                    DIRECTION_KEY: VIALER_MIDDLEWARE_INCOMING_VALUE,
+                    FAILED_REASON_KEY: 'Unable to get response from phone',
+                }
+            )
+
+            # Log to the metrics file.
+            metrics_logger = logging.getLogger('metrics')
+            metrics_logger.info({
+                OS_KEY: device.app.platform,
+                CALL_SETUP_SUCCESSFUL_KEY: 'false',
+                FAILED_REASON_KEY: 'Device did not respond in time',
+            })
 
         # Failed status for asterisk.
         return Response('status=NAK')
