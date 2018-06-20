@@ -12,9 +12,17 @@ from testfixtures import LogCapture
 
 from app.cache import RedisClusterCache
 from app.models import App, Device, ResponseLog
-from main.prometheus import OS_KEY, OS_VERSION_KEY, APP_VERSION_KEY, NETWORK_KEY, CONNECTION_TYPE_KEY, DIRECTION_KEY, \
-    CALL_SETUP_SUCCESSFUL_KEY, FAILED_REASON_KEY
-
+from main.prometheus import (
+    APP_VERSION_KEY,
+    CALL_SETUP_SUCCESSFUL_KEY,
+    CONNECTION_TYPE_KEY,
+    DIRECTION_KEY,
+    FAILED_REASON_KEY,
+    NETWORK_KEY,
+    NETWORK_OPERATOR_KEY,
+    OS_KEY,
+    OS_VERSION_KEY,
+)
 from .utils import mocked_send_apns_message, mocked_send_fcm_message, ThreadWithReturn
 
 
@@ -745,7 +753,8 @@ class LogMetricsTest(TestCase):
         self.data[OS_KEY] = 'iOS'
         self.data[OS_VERSION_KEY] = '5.0.1'
         self.data[APP_VERSION_KEY] = '2.0'
-        self.data[NETWORK_KEY] = 'WiFi'
+        self.data[NETWORK_KEY] = '4G'
+        self.data[NETWORK_OPERATOR_KEY] = 'T-Mobile'
         self.data[CONNECTION_TYPE_KEY] = 'TLS'
         self.data[DIRECTION_KEY] = 'Incoming'
         self.data[CALL_SETUP_SUCCESSFUL_KEY] = 'declined'
@@ -762,3 +771,4 @@ class LogMetricsTest(TestCase):
         self.assertEquals(self.data[CONNECTION_TYPE_KEY], value_dict[CONNECTION_TYPE_KEY])
         self.assertEquals(self.data[DIRECTION_KEY], value_dict[DIRECTION_KEY])
         self.assertEquals(self.data[FAILED_REASON_KEY], value_dict[FAILED_REASON_KEY])
+        self.assertEquals(self.data[NETWORK_OPERATOR_KEY], value_dict[NETWORK_OPERATOR_KEY])

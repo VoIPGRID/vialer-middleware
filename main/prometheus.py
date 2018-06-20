@@ -62,19 +62,21 @@ REDIS_HEALTH = Gauge('redis_health', 'See if Redis is still reachable.')
 VIALER_CALL_SUCCESS_TOTAL = Counter(
     VIALER_CALL_SUCCESS_TOTAL_KEY,
     'The amount of successful calls that were made using the Vialer app',
-    ['os', 'os_version', 'app_version', 'network', 'connection_type', 'direction'],
+    ['os', 'os_version', 'app_version', 'network', 'network_operator', 'connection_type', 'direction'],
 )
 
 VIALER_CALL_FAILURE_TOTAL = Counter(
     VIALER_CALL_FAILURE_TOTAL_KEY,
     'The amount of calls that failed during setup using the Vialer app',
-    ['os', 'os_version', 'app_version', 'network', 'connection_type', 'direction', 'failed_reason'],
+    ['os', 'os_version', 'app_version', 'network', 'connection_type', 'network_operator', 'direction',
+     'failed_reason'],
 )
 
 VIALER_HANGUP_REASON_TOTAL = Counter(
     VIALER_HANGUP_REASON_TOTAL_KEY,
     'The amount of calls that failed during the call using the Vialer app',
-    ['os', 'os_version', 'app_version', 'network', 'connection_type', 'direction', 'failed_reason'],
+    ['os', 'os_version', 'app_version', 'network', 'network_operator', 'connection_type', 'direction',
+     'failed_reason'],
 )
 
 VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL = Counter(
@@ -88,6 +90,7 @@ VIALER_MIDDLEWARE_PUSH_NOTIFICATION_SUCCESS_TOTAL = Counter(
     'The amount of push notifications that were successful processed by the app',
     ['os', 'direction'],
 )
+
 
 def write_read_redis():
     """
@@ -152,6 +155,7 @@ def increment_vialer_call_success_metric_counter():
             os_version=value_dict[OS_VERSION_KEY],
             app_version=value_dict[APP_VERSION_KEY],
             network=value_dict[NETWORK_KEY],
+            network_operator=value_dict.get(NETWORK_OPERATOR_KEY, ''),
             connection_type=value_dict[CONNECTION_TYPE_KEY],
             direction=value_dict[DIRECTION_KEY],
         ).inc()
@@ -180,6 +184,7 @@ def increment_vialer_call_failure_metric_counter():
             os_version=value_dict[OS_VERSION_KEY],
             app_version=value_dict[APP_VERSION_KEY],
             network=value_dict[NETWORK_KEY],
+            network_operator=value_dict.get(NETWORK_OPERATOR_KEY, ''),
             connection_type=value_dict[CONNECTION_TYPE_KEY],
             direction=value_dict[DIRECTION_KEY],
             failed_reason=value_dict[FAILED_REASON_KEY],
@@ -209,6 +214,7 @@ def increment_vialer_call_hangup_reason_metric_counter():
             os_version=value_dict[OS_VERSION_KEY],
             app_version=value_dict[APP_VERSION_KEY],
             network=value_dict[NETWORK_KEY],
+            network_operator=value_dict.get(NETWORK_OPERATOR_KEY, ''),
             connection_type=value_dict[CONNECTION_TYPE_KEY],
             direction=value_dict[DIRECTION_KEY],
             failed_reason=value_dict[FAILED_REASON_KEY],
@@ -248,6 +254,7 @@ def increment_vialer_middleware_failed_push_notifications_metric_counter():
     # of the selected range are deleted. In this case we are keeping
     # all of the values we did not yet process in the list.
     REDIS_CLUSTER_CLIENT.client.ltrim(VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL_KEY, list_length, -1)
+
 
 def increment_vialer_middleware_success_push_notifications_metric_counter():
     """
