@@ -82,6 +82,18 @@ def get_metrics(start_date, end_date, platform):
     return results
 
 
+def log_data_to_metrics_log(log_data, sip_user_id):
+    """
+    Function that handles logging data to the metrics log.
+
+    Args:
+        log_data (dict): The dict that is going to be logged.
+        sip_user_id (str): The SIP user id linked to the log statement.
+    """
+    metrics_logger = logging.getLogger('metrics')
+    metrics_logger.info('SIP_USER_ID: {} DATA: {}'.format(sip_user_id, log_data))
+
+
 def log_middleware_information(log_statement, dict_with_variables, log_level, device=None):
     """
     Function that handles the logging for the middleware.

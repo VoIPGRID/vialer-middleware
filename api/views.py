@@ -21,9 +21,9 @@ from app.tasks import log_to_db, task_incoming_call_notify, task_notify_old_toke
 from app.utils import (
     LOG_CALL_FROM,
     LOG_CALLER_ID,
+    log_data_to_metrics_log,
     log_middleware_information,
-    LOG_SIP_USER_ID,
-)
+    LOG_SIP_USER_ID)
 from main.prometheus import (
     CALL_SETUP_SUCCESSFUL_KEY,
     DIRECTION_KEY,
@@ -218,6 +218,7 @@ class IncomingCallView(VialerAPIView):
                 logging.INFO,
                 device=device,
             )
+
             # We have to wait till the app responds and sets the cache value.
             while time.time() < wait_until:
                 available = redis_cache.get(cache_key)
@@ -246,11 +247,11 @@ class IncomingCallView(VialerAPIView):
                     )
 
                     # Log to the metrics file.
-                    metrics_logger = logging.getLogger('metrics')
-                    metrics_logger.info({
+                    metrics_data = {
                         OS_KEY: device.app.platform,
                         CALL_SETUP_SUCCESSFUL_KEY: 'true',
-                    })
+                    }
+                    log_data_to_metrics_log(metrics_data, sip_user_id)
 
                     # Success status for asterisk.
                     return Response('status=ACK')
@@ -278,12 +279,12 @@ class IncomingCallView(VialerAPIView):
                     )
 
                     # Log to the metrics file.
-                    metrics_logger = logging.getLogger('metrics')
-                    metrics_logger.info({
+                    metrics_data = {
                         OS_KEY: device.app.platform,
                         CALL_SETUP_SUCCESSFUL_KEY: 'false',
                         FAILED_REASON_KEY: 'Device not available',
-                    })
+                    }
+                    log_data_to_metrics_log(metrics_data, sip_user_id)
 
                     # App is not available.
                     return Response('status=NAK')
@@ -325,12 +326,12 @@ class IncomingCallView(VialerAPIView):
             )
 
             # Log to the metrics file.
-            metrics_logger = logging.getLogger('metrics')
-            metrics_logger.info({
+            metrics_data = {
                 OS_KEY: device.app.platform,
                 CALL_SETUP_SUCCESSFUL_KEY: 'false',
                 FAILED_REASON_KEY: 'Device did not respond in time',
-            })
+            }
+            log_data_to_metrics_log(metrics_data, sip_user_id)
 
         # Failed status for asterisk.
         return Response('status=NAK')
@@ -573,7 +574,6 @@ class LogMetricsView(VialerAPIView):
     authentication_classes = (VoipgridAuthentication,)
 
     def post(self, request):
-        metrics_logger = logging.getLogger('metrics')
         redis_cache = RedisClusterCache()
         json_data = request.data
 
@@ -592,5 +592,6 @@ class LogMetricsView(VialerAPIView):
                 metric_data[FAILED_REASON_KEY] = json_data.get(FAILED_REASON_KEY)
                 redis_cache.client.rpush(VIALER_HANGUP_REASON_TOTAL_KEY, metric_data)
 
-        metrics_logger.info(json_data)
+        log_data_to_metrics_log(json_data, json_data.get(LOG_SIP_USER_ID))
+
         return Response(status=HTTP_200_OK)
