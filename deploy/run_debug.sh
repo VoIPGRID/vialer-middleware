@@ -5,7 +5,7 @@ check_up() {
     host=$2
     port=$3
 
-    max=13 # 1 minute
+    max=1000000 # Stop the docker container from restarting when in debug mode.
 
     counter=1
     while true;do
