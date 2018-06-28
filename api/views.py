@@ -25,6 +25,7 @@ from app.utils import (
     log_middleware_information,
     LOG_SIP_USER_ID)
 from main.prometheus import (
+    ACTION_KEY,
     CALL_SETUP_SUCCESSFUL_KEY,
     DIRECTION_KEY,
     FAILED_REASON_KEY,
@@ -32,6 +33,8 @@ from main.prometheus import (
     VIALER_CALL_FAILURE_TOTAL_KEY,
     VIALER_CALL_SUCCESS_TOTAL_KEY,
     VIALER_HANGUP_REASON_TOTAL_KEY,
+    VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY,
+    VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL_KEY,
     VIALER_MIDDLEWARE_INCOMING_VALUE,
     VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL_KEY,
     VIALER_MIDDLEWARE_PUSH_NOTIFICATION_SUCCESS_TOTAL_KEY)
@@ -133,6 +136,7 @@ class IncomingCallView(VialerAPIView):
         Raises:
             Http404: When an app_id is provided that does not exist.
         """
+        redis_cache = RedisClusterCache()
         serialized_data = self._serialize_request(request)
 
         sip_user_id = serialized_data['sip_user_id']
@@ -159,6 +163,25 @@ class IncomingCallView(VialerAPIView):
                 ]),
                 logging.WARNING,
             )
+
+            # Push data to Redis for when a sip user id couldn't be found.
+            redis_cache.client.rpush(
+                VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL_KEY,
+                {
+                    OS_KEY: 'Middleware',
+                    ACTION_KEY: 'Received',
+                    FAILED_REASON_KEY: 'failed no sip_user_id',
+                }
+            )
+
+            # Log to the metrics file.
+            metrics_data = {
+                OS_KEY: 'Middleware',
+                ACTION_KEY: 'Received',
+                FAILED_REASON_KEY: 'failed no sip_user_id',
+                'unique_key': unique_key,
+            }
+            log_data_to_metrics_log(metrics_data, sip_user_id)
         except Exception:
             log_middleware_information(
                 '{0} | EXCEPTION WHILE FINDING DEVICE FOR SIP_USER_ID : {1}',
@@ -181,6 +204,23 @@ class IncomingCallView(VialerAPIView):
                 device=device,
             )
 
+            # Push data to Redis for when a incoming call is received.
+            redis_cache.client.rpush(
+                VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY,
+                {
+                    OS_KEY: 'Middleware',
+                    ACTION_KEY: 'Received',
+                }
+            )
+
+            # Log to the metrics file.
+            metrics_data = {
+                OS_KEY: 'Middleware',
+                ACTION_KEY: 'Received',
+                'unique_key': unique_key,
+            }
+            log_data_to_metrics_log(metrics_data, sip_user_id)
+
             attempt = 1
             # Send push message to wake up app.
             task_incoming_call_notify(
@@ -202,7 +242,6 @@ class IncomingCallView(VialerAPIView):
             max_attemps = int(wait_interval / resend_interval) - 1
 
             cache_key = 'call_{0}'.format(unique_key)
-            redis_cache = RedisClusterCache()
             # Create cache entry with device platform as placeholder for the
             # available flag. Done for logging purposes.
             redis_cache.set(cache_key, device.app.platform)
