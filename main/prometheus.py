@@ -42,6 +42,7 @@ CALL_ID_KEY = 'call_id'
 LOG_ID_KEY = 'log_id'
 TIME_TO_INITIAL_RESPONSE_KEY = 'time_to_initial_respone'
 FAILED_REASON_KEY = 'failed_reason'
+ACTION_KEY = 'action'
 
 # Redis keys.
 VIALER_CALL_SUCCESS_TOTAL_KEY = 'vialer_call_success_total'
@@ -49,6 +50,8 @@ VIALER_CALL_FAILURE_TOTAL_KEY = 'vialer_call_failure_total'
 VIALER_HANGUP_REASON_TOTAL_KEY = 'vialer_heangup_reason_total'
 VIALER_MIDDLEWARE_PUSH_NOTIFICATION_SUCCESS_TOTAL_KEY = 'vialer_middleware_push_notification_success_total'
 VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL_KEY = 'vialer_middleware_push_notification_failed_total'
+VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY = 'vialer_middleware_incoming_call_total'
+VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL_KEY = 'vialer_middleware_incoming_call_failed_total'
 
 VIALER_MIDDLEWARE_INCOMING_VALUE = 'Incoming'
 
@@ -91,6 +94,17 @@ VIALER_MIDDLEWARE_PUSH_NOTIFICATION_SUCCESS_TOTAL = Counter(
     ['os', 'direction'],
 )
 
+VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL = Counter(
+    VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY,
+    'The amount of times an incoming call was presented at the middleware',
+    ['os', 'action'],
+)
+
+VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL = Counter(
+    VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL_KEY,
+    'The amount of times an incoming call that were presented but couldn\'t be handled',
+    ['os', 'action', 'failed_reason'],
+)
 
 def write_read_redis():
     """
@@ -285,6 +299,64 @@ def increment_vialer_middleware_success_push_notifications_metric_counter():
     REDIS_CLUSTER_CLIENT.client.ltrim(VIALER_MIDDLEWARE_PUSH_NOTIFICATION_SUCCESS_TOTAL_KEY, list_length, -1)
 
 
+def increment_vialer_middleware_incoming_call_metric_counter():
+    """
+    Function that increments the
+    vialer_middleware_incoming_call_total counter.
+    """
+    # Get the length of the list in redis.
+    list_length = REDIS_CLUSTER_CLIENT.client.llen(VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY)
+
+    # Get the values from the list in redis.
+    data_list = REDIS_CLUSTER_CLIENT.client.lrange(
+        VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY,
+        0,
+        list_length,
+    )
+
+    for value_str in data_list:
+        # Parse the string to a dict.
+        value_dict = literal_eval(value_str)
+        VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL.labels(
+            os=value_dict[OS_KEY],
+            action=value_dict[DIRECTION_KEY],
+        ).inc()
+
+    # Trim the list, this means that the values that are outside
+    # of the selected range are deleted. In this case we are keeping
+    # all of the values we did not yet process in the list.
+    REDIS_CLUSTER_CLIENT.client.ltrim(VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY, list_length, -1)
+
+
+def increment_vialer_middleware_failed_incoming_call_metric_counter():
+    """
+        Function that increments the
+        vialer_middleware_incoming_call_failed_total counter.
+        """
+    # Get the length of the list in redis.
+    list_length = REDIS_CLUSTER_CLIENT.client.llen(VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL_KEY)
+
+    # Get the values from the list in redis.
+    data_list = REDIS_CLUSTER_CLIENT.client.lrange(
+        VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL_KEY,
+        0,
+        list_length,
+    )
+
+    for value_str in data_list:
+        # Parse the string to a dict.
+        value_dict = literal_eval(value_str)
+        VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL.labels(
+            os=value_dict[OS_KEY],
+            action=value_dict[DIRECTION_KEY],
+            failed_reason=value_dict[FAILED_REASON_KEY],
+        ).inc()
+
+    # Trim the list, this means that the values that are outside
+    # of the selected range are deleted. In this case we are keeping
+    # all of the values we did not yet process in the list.
+    REDIS_CLUSTER_CLIENT.client.ltrim(VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL_KEY, list_length, -1)
+
 if __name__ == '__main__':
     try:
         start_http_server(int(settings.PROMETHEUS_PORT))
@@ -309,6 +381,8 @@ if __name__ == '__main__':
         increment_vialer_call_hangup_reason_metric_counter()
         increment_vialer_middleware_failed_push_notifications_metric_counter()
         increment_vialer_middleware_success_push_notifications_metric_counter()
+        increment_vialer_middleware_incoming_call_metric_counter()
+        increment_vialer_middleware_failed_incoming_call_metric_counter()
 
         # Sleep before going for a new round.
         time.sleep(10)
