@@ -319,7 +319,7 @@ def increment_vialer_middleware_incoming_call_metric_counter():
         value_dict = literal_eval(value_str)
         VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL.labels(
             os=value_dict[OS_KEY],
-            action=value_dict[DIRECTION_KEY],
+            action=value_dict[ACTION_KEY],
         ).inc()
 
     # Trim the list, this means that the values that are outside
@@ -346,9 +346,9 @@ def increment_vialer_middleware_failed_incoming_call_metric_counter():
     for value_str in data_list:
         # Parse the string to a dict.
         value_dict = literal_eval(value_str)
-        VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL.labels(
+        VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL.labels(
             os=value_dict[OS_KEY],
-            action=value_dict[DIRECTION_KEY],
+            action=value_dict[ACTION_KEY],
             failed_reason=value_dict[FAILED_REASON_KEY],
         ).inc()
 
