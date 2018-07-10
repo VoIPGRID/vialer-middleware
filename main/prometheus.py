@@ -17,7 +17,9 @@ import time
 from django.conf import settings
 from django.db import DatabaseError
 from prometheus_client import Counter, Gauge, start_http_server
+from raven.contrib.django.models import client as raven_client
 from redis import RedisError
+from rediscluster.exceptions import RedisClusterException
 
 from app.cache import RedisClusterCache
 from app.models import GCM_PLATFORM, ResponseLog
@@ -106,6 +108,7 @@ VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL = Counter(
     ['os', 'action', 'failed_reason'],
 )
 
+
 def write_read_redis():
     """
     Write a key value to Redis to see if it is up
@@ -117,7 +120,7 @@ def write_read_redis():
 
     try:
         REDIS_CLUSTER_CLIENT.set(REDIS_KEY, random_value)
-    except RedisError:
+    except Exception:
         return False
     else:
         if REDIS_CLUSTER_CLIENT.get(REDIS_KEY) == random_value:
@@ -357,17 +360,20 @@ def increment_vialer_middleware_failed_incoming_call_metric_counter():
     # all of the values we did not yet process in the list.
     REDIS_CLUSTER_CLIENT.client.ltrim(VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL_KEY, list_length, -1)
 
+
 if __name__ == '__main__':
     try:
         start_http_server(int(settings.PROMETHEUS_PORT))
     except ValueError:
         print('Invalid port supplied, port needs to be a number.')
 
+    is_redis_down = False
     while True:
         redis = write_read_redis()
         orm = write_read_orm()
         if redis:
             REDIS_HEALTH.set(1)
+            is_redis_down = False
         else:
             REDIS_HEALTH.set(0)
         if orm:
@@ -376,13 +382,19 @@ if __name__ == '__main__':
             MYSQL_HEALTH.set(0)
 
         # Increment counters.
-        increment_vialer_call_success_metric_counter()
-        increment_vialer_call_failure_metric_counter()
-        increment_vialer_call_hangup_reason_metric_counter()
-        increment_vialer_middleware_failed_push_notifications_metric_counter()
-        increment_vialer_middleware_success_push_notifications_metric_counter()
-        increment_vialer_middleware_incoming_call_metric_counter()
-        increment_vialer_middleware_failed_incoming_call_metric_counter()
+        try:
+            increment_vialer_call_success_metric_counter()
+            increment_vialer_call_failure_metric_counter()
+            increment_vialer_call_hangup_reason_metric_counter()
+            increment_vialer_middleware_failed_push_notifications_metric_counter()
+            increment_vialer_middleware_success_push_notifications_metric_counter()
+            increment_vialer_middleware_incoming_call_metric_counter()
+            increment_vialer_middleware_failed_incoming_call_metric_counter()
+        except (RedisError, RedisClusterException):
+            # Log exception to Sentry each time Redis changes state.
+            if not is_redis_down:
+                raven_client.captureException()
+                is_redis_down = True
 
         # Sleep before going for a new round.
         time.sleep(10)
