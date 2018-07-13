@@ -487,6 +487,17 @@ def send_fcm_message(device, app, message_type, data=None):
                 device=device,
             )
 
+            if result['results'] == 'NotRegistered':
+                log_middleware_information(
+                    '{0} | Removed {1}',
+                    OrderedDict([
+                        ('unique_key', unique_key),
+                        ('device', device),
+                    ]),
+                    logging.INFO,
+                )
+                device.delete()
+
         if result.get('canonical_ids'):
             log_middleware_information(
                 '{0} | Should replace device token {1}',
