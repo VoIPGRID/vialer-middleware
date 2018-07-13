@@ -9,7 +9,7 @@ from .utils import get_metrics
 
 
 class DeviceAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ('name', 'sip_user_id',)
 
 
 class AppAdmin(admin.ModelAdmin):
