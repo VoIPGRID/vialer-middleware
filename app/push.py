@@ -487,7 +487,8 @@ def send_fcm_message(device, app, message_type, data=None):
                 device=device,
             )
 
-            if result['results'] == 'NotRegistered':
+            if (len(result['results']) > 0 and 'error' in result['results'][0] and
+                    result['results'][0]['error'] == 'NotRegistered'):
                 log_middleware_information(
                     '{0} | Removed {1}',
                     OrderedDict([
