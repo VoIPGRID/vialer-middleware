@@ -49,7 +49,7 @@ ACTION_KEY = 'action'
 # Redis keys.
 VIALER_CALL_SUCCESS_TOTAL_KEY = 'vialer_call_success_total'
 VIALER_CALL_FAILURE_TOTAL_KEY = 'vialer_call_failure_total'
-VIALER_HANGUP_REASON_TOTAL_KEY = 'vialer_heangup_reason_total'
+VIALER_HANGUP_REASON_TOTAL_KEY = 'vialer_hangup_reason_total'
 VIALER_MIDDLEWARE_PUSH_NOTIFICATION_SUCCESS_TOTAL_KEY = 'vialer_middleware_push_notification_success_total'
 VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL_KEY = 'vialer_middleware_push_notification_failed_total'
 VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY = 'vialer_middleware_incoming_call_total'
