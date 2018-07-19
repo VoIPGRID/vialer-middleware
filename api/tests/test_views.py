@@ -690,7 +690,7 @@ class LogMetricsTest(TestCase):
         self.redis_client = RedisClusterCache()
         self.success_redis_key = 'vialer_call_success_total'
         self.failed_redis_key = 'vialer_call_failure_total'
-        self.hangup_redis_key = 'vialer_heangup_reason_total'
+        self.hangup_redis_key = 'vialer_hangup_reason_total'
 
     def tearDown(self):
         super(LogMetricsTest, self).tearDown()
