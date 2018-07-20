@@ -1,4 +1,4 @@
-FROM python:3.4
+FROM python:3.4-jessie
 ENV PYTHONUNBUFFERED 1
 
 RUN apt-get update && apt-get install -y \
