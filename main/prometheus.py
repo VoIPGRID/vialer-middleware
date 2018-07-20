@@ -42,8 +42,9 @@ CALL_SETUP_SUCCESSFUL_KEY = 'call_setup_successful'
 CLIENT_COUNTRY_KEY = 'client_country'
 CALL_ID_KEY = 'call_id'
 LOG_ID_KEY = 'log_id'
-TIME_TO_INITIAL_RESPONSE_KEY = 'time_to_initial_respone'
+TIME_TO_INITIAL_RESPONSE_KEY = 'time_to_initial_response'
 FAILED_REASON_KEY = 'failed_reason'
+HANGUP_REASON_KEY = 'hangup_reason'
 ACTION_KEY = 'action'
 
 # Redis keys.
@@ -79,9 +80,9 @@ VIALER_CALL_FAILURE_TOTAL = Counter(
 
 VIALER_HANGUP_REASON_TOTAL = Counter(
     VIALER_HANGUP_REASON_TOTAL_KEY,
-    'The amount of calls that failed during the call using the Vialer app',
+    'The amount of why a call was ended for the Vialer app',
     ['os', 'os_version', 'app_version', 'network', 'network_operator', 'connection_type', 'direction',
-     'failed_reason'],
+     'hangup_reason'],
 )
 
 VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL = Counter(
@@ -213,10 +214,10 @@ def increment_vialer_call_failure_metric_counter():
     REDIS_CLUSTER_CLIENT.client.ltrim(VIALER_CALL_FAILURE_TOTAL_KEY, list_length, -1)
 
 
-def increment_vialer_call_hangup_reason_metric_counter():
+def increment_vialer_hangup_reason_metric_counter():
     """
-    Function that increments the vialer_hangup_reason_total counter.
-    """
+        Function that increments the vialer_hangup_total counter.
+        """
     # Get the length of the list in redis.
     list_length = REDIS_CLUSTER_CLIENT.client.llen(VIALER_HANGUP_REASON_TOTAL_KEY)
 
@@ -234,7 +235,7 @@ def increment_vialer_call_hangup_reason_metric_counter():
             network_operator=value_dict.get(NETWORK_OPERATOR_KEY, ''),
             connection_type=value_dict[CONNECTION_TYPE_KEY],
             direction=value_dict[DIRECTION_KEY],
-            failed_reason=value_dict[FAILED_REASON_KEY],
+            hangup_reason=value_dict[HANGUP_REASON_KEY],
         ).inc()
 
     # Trim the list, this means that the values that are outside
@@ -385,7 +386,7 @@ if __name__ == '__main__':
         try:
             increment_vialer_call_success_metric_counter()
             increment_vialer_call_failure_metric_counter()
-            increment_vialer_call_hangup_reason_metric_counter()
+            increment_vialer_hangup_reason_metric_counter()
             increment_vialer_middleware_failed_push_notifications_metric_counter()
             increment_vialer_middleware_success_push_notifications_metric_counter()
             increment_vialer_middleware_incoming_call_metric_counter()

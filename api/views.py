@@ -29,6 +29,7 @@ from main.prometheus import (
     CALL_SETUP_SUCCESSFUL_KEY,
     DIRECTION_KEY,
     FAILED_REASON_KEY,
+    HANGUP_REASON_KEY,
     OS_KEY,
     VIALER_CALL_FAILURE_TOTAL_KEY,
     VIALER_CALL_SUCCESS_TOTAL_KEY,
@@ -615,21 +616,17 @@ class LogMetricsView(VialerAPIView):
     def post(self, request):
         redis_cache = RedisClusterCache()
         json_data = request.data
+        metric_data = get_metrics_base_data(json_data)
 
-        if CALL_SETUP_SUCCESSFUL_KEY in json_data:
+        if HANGUP_REASON_KEY in json_data:
+            metric_data[HANGUP_REASON_KEY] = json_data.get(HANGUP_REASON_KEY)
+            redis_cache.client.rpush(VIALER_HANGUP_REASON_TOTAL_KEY, metric_data)
+        elif CALL_SETUP_SUCCESSFUL_KEY in json_data:
             if json_data.get(CALL_SETUP_SUCCESSFUL_KEY) == 'true':
-                metric_data = get_metrics_base_data(json_data)
                 redis_cache.client.rpush(VIALER_CALL_SUCCESS_TOTAL_KEY, metric_data)
-
             elif json_data.get(CALL_SETUP_SUCCESSFUL_KEY) == 'false':
-                metric_data = get_metrics_base_data(json_data)
                 metric_data[FAILED_REASON_KEY] = json_data.get(FAILED_REASON_KEY)
                 redis_cache.client.rpush(VIALER_CALL_FAILURE_TOTAL_KEY, metric_data)
-
-            elif json_data.get(CALL_SETUP_SUCCESSFUL_KEY) == 'declined':
-                metric_data = get_metrics_base_data(json_data)
-                metric_data[FAILED_REASON_KEY] = json_data.get(FAILED_REASON_KEY)
-                redis_cache.client.rpush(VIALER_HANGUP_REASON_TOTAL_KEY, metric_data)
 
         log_data_to_metrics_log(json_data, json_data.get(LOG_SIP_USER_ID))
 
