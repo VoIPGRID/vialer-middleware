@@ -100,13 +100,6 @@ REST_FRAMEWORK = {
 APNS_PRODUCTION = 'push_production'
 APNS_SANDBOX = 'push_sandbox'
 
-# List of SIP ID's that use the APNSv2 API.
-APNS2_DEVICES = os.environ.get('APNS2_DEVICES', '')
-if APNS2_DEVICES:
-    APNS2_DEVICES = [sip_id.strip() for sip_id in APNS2_DEVICES.split(',')]
-else:
-    APNS2_DEVICES = []
-
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
@@ -214,6 +207,6 @@ RAVEN_CONFIG = {
 PROMETHEUS_PORT = os.environ.get('PROMETHEUS_PORT', '9000')
 
 try:
-    from .local import *
+    from .local import *  # noqa
 except ImportError:
     pass
