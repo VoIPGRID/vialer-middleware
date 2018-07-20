@@ -18,11 +18,11 @@ from main.prometheus import (
     CONNECTION_TYPE_KEY,
     DIRECTION_KEY,
     FAILED_REASON_KEY,
+    HANGUP_REASON_KEY,
     NETWORK_KEY,
     NETWORK_OPERATOR_KEY,
     OS_KEY,
-    OS_VERSION_KEY,
-)
+    OS_VERSION_KEY)
 from .utils import mocked_send_apns_message, mocked_send_fcm_message, ThreadWithReturn
 
 
@@ -757,8 +757,7 @@ class LogMetricsTest(TestCase):
         self.data[NETWORK_OPERATOR_KEY] = 'T-Mobile'
         self.data[CONNECTION_TYPE_KEY] = 'TLS'
         self.data[DIRECTION_KEY] = 'Incoming'
-        self.data[CALL_SETUP_SUCCESSFUL_KEY] = 'declined'
-        self.data[FAILED_REASON_KEY] = 'Too much noise during the call'
+        self.data[HANGUP_REASON_KEY] = 'REMOTE'
         response = self.client.post(self.log_metrics_url, self.data)
         self.assertEquals(response.status_code, 200)
         self.assertEquals(self.redis_client.client.llen(self.hangup_redis_key), 1)
@@ -770,5 +769,5 @@ class LogMetricsTest(TestCase):
         self.assertEquals(self.data[NETWORK_KEY], value_dict[NETWORK_KEY])
         self.assertEquals(self.data[CONNECTION_TYPE_KEY], value_dict[CONNECTION_TYPE_KEY])
         self.assertEquals(self.data[DIRECTION_KEY], value_dict[DIRECTION_KEY])
-        self.assertEquals(self.data[FAILED_REASON_KEY], value_dict[FAILED_REASON_KEY])
+        self.assertEquals(self.data[HANGUP_REASON_KEY], value_dict[HANGUP_REASON_KEY])
         self.assertEquals(self.data[NETWORK_OPERATOR_KEY], value_dict[NETWORK_OPERATOR_KEY])
