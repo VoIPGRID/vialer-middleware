@@ -5,10 +5,10 @@ import os
 from time import time
 from urllib.parse import urljoin
 
-from apns_clerk import APNs, Message, Session
 from apns2.client import APNsClient
-from apns2.errors import BadDeviceToken, DeviceTokenNotForTopic, APNsException, Unregistered
+from apns2.errors import APNsException, BadDeviceToken, DeviceTokenNotForTopic, Unregistered
 from apns2.payload import Payload
+from apns_clerk import APNs, Message, Session
 from django.conf import settings
 from gcm.gcm import GCM, GCMAuthenticationException
 from pyfcm import FCMNotification
@@ -141,10 +141,10 @@ def send_apns_message(device, app, message_type, data=None):
     """
     Send an Apple Push Notification message.
     """
-    if device.sip_user_id not in settings.APNS2_DEVICES:
-        send_legacy_apns_message(device, app, message_type, data)
-    else:
+    if device.use_apns2:
         send_apns2_message(device, app, message_type, data)
+    else:
+        send_legacy_apns_message(device, app, message_type, data)
 
 
 def send_legacy_apns_message(device, app, message_type, data=None):
