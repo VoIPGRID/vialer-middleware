@@ -63,6 +63,7 @@ MYSQL_HEALTH = Gauge('mysql_health', 'See if MySQL is still reachable through th
 REDIS_CLUSTER_CLIENT = RedisClusterCache()
 REDIS_KEY = 'test_if_redis_works'
 REDIS_HEALTH = Gauge('redis_health', 'See if Redis is still reachable.')
+DOCKER_TAG = Counter('docker_tag', 'See which docker tag is running.', ['docker_tag'])
 
 # Vialer call metrics.
 VIALER_CALL_SUCCESS_TOTAL = Counter(
@@ -369,6 +370,7 @@ if __name__ == '__main__':
         print('Invalid port supplied, port needs to be a number.')
 
     is_redis_down = False
+    DOCKER_TAG.labels(docker_tag=settings.DOCKER_TAG).inc()
     while True:
         redis = write_read_redis()
         orm = write_read_orm()

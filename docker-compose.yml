@@ -36,6 +36,7 @@ app:
    - DB_ENV_HOST=db
    - DB_ENV_PORT=3306
    - PROMETHEUS_PORT=9000
+   - DOCKER_TAG=development
 
   # Map log files from container to local disk.
   volumes:

@@ -206,6 +206,8 @@ RAVEN_CONFIG = {
 
 PROMETHEUS_PORT = os.environ.get('PROMETHEUS_PORT', '9000')
 
+DOCKER_TAG = os.environ.get('DOCKER_TAG', 'Unknown')
+
 try:
     from .local import *  # noqa
 except ImportError:
