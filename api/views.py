@@ -34,7 +34,7 @@ from main.prometheus import (
     VIALER_CALL_FAILURE_TOTAL_KEY,
     VIALER_CALL_SUCCESS_TOTAL_KEY,
     VIALER_HANGUP_REASON_TOTAL_KEY,
-    VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY,
+    VIALER_MIDDLEWARE_INCOMING_CALL_SUCCESS_TOTAL_KEY,
     VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL_KEY,
     VIALER_MIDDLEWARE_INCOMING_VALUE,
     VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL_KEY,
@@ -207,7 +207,7 @@ class IncomingCallView(VialerAPIView):
 
             # Push data to Redis for when a incoming call is received.
             redis_cache.client.rpush(
-                VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY,
+                VIALER_MIDDLEWARE_INCOMING_CALL_SUCCESS_TOTAL_KEY,
                 {
                     OS_KEY: 'Middleware',
                     ACTION_KEY: 'Received',
