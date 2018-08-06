@@ -53,7 +53,7 @@ VIALER_CALL_FAILURE_TOTAL_KEY = 'vialer_call_failure_total'
 VIALER_HANGUP_REASON_TOTAL_KEY = 'vialer_hangup_reason_total'
 VIALER_MIDDLEWARE_PUSH_NOTIFICATION_SUCCESS_TOTAL_KEY = 'vialer_middleware_push_notification_success_total'
 VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL_KEY = 'vialer_middleware_push_notification_failed_total'
-VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY = 'vialer_middleware_incoming_call_total'
+VIALER_MIDDLEWARE_INCOMING_CALL_SUCCESS_TOTAL_KEY = 'vialer_middleware_incoming_call_success_total'
 VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL_KEY = 'vialer_middleware_incoming_call_failed_total'
 
 VIALER_MIDDLEWARE_INCOMING_VALUE = 'Incoming'
@@ -99,7 +99,7 @@ VIALER_MIDDLEWARE_PUSH_NOTIFICATION_SUCCESS_TOTAL = Counter(
 )
 
 VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL = Counter(
-    VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY,
+    VIALER_MIDDLEWARE_INCOMING_CALL_SUCCESS_TOTAL_KEY,
     'The amount of times an incoming call was presented at the middleware',
     ['os', 'action'],
 )
@@ -310,11 +310,11 @@ def increment_vialer_middleware_incoming_call_metric_counter():
     vialer_middleware_incoming_call_total counter.
     """
     # Get the length of the list in redis.
-    list_length = REDIS_CLUSTER_CLIENT.client.llen(VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY)
+    list_length = REDIS_CLUSTER_CLIENT.client.llen(VIALER_MIDDLEWARE_INCOMING_CALL_SUCCESS_TOTAL_KEY)
 
     # Get the values from the list in redis.
     data_list = REDIS_CLUSTER_CLIENT.client.lrange(
-        VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY,
+        VIALER_MIDDLEWARE_INCOMING_CALL_SUCCESS_TOTAL_KEY,
         0,
         list_length,
     )
@@ -330,7 +330,7 @@ def increment_vialer_middleware_incoming_call_metric_counter():
     # Trim the list, this means that the values that are outside
     # of the selected range are deleted. In this case we are keeping
     # all of the values we did not yet process in the list.
-    REDIS_CLUSTER_CLIENT.client.ltrim(VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL_KEY, list_length, -1)
+    REDIS_CLUSTER_CLIENT.client.ltrim(VIALER_MIDDLEWARE_INCOMING_CALL_SUCCESS_TOTAL_KEY, list_length, -1)
 
 
 def increment_vialer_middleware_failed_incoming_call_metric_counter():
