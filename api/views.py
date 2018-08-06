@@ -328,6 +328,19 @@ class IncomingCallView(VialerAPIView):
 
                     # App is not available.
                     return Response('status=NAK')
+                elif available == 'Removed':
+                    log_middleware_information(
+                        '{0} | {1} Device has no valid push token, sending NAK on {2}',
+                        OrderedDict([
+                            ('unique_key', unique_key),
+                            ('platform', device.app.platform.upper()),
+                            ('nak_time', datetime.datetime.fromtimestamp(time.time()).strftime('%H:%M:%S.%f')),
+                        ]),
+                        logging.INFO,
+                        device=device,
+                    )
+
+                    return Response('status=NAK')
                 else:
                     # Try to resend the push message every X seconds or
                     # after exceeding the max_attempts.

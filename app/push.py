@@ -14,6 +14,7 @@ from gcm.gcm import GCM, GCMAuthenticationException
 from pyfcm import FCMNotification
 from pyfcm.errors import AuthenticationError, FCMServerError, InternalPackageError
 
+from app.cache import RedisClusterCache
 from app.utils import log_middleware_information
 
 from .models import ANDROID_PLATFORM, APNS_PLATFORM, GCM_PLATFORM
@@ -497,6 +498,11 @@ def send_fcm_message(device, app, message_type, data=None):
                     ]),
                     logging.INFO,
                 )
+                # Remove the unique key from the cache so we can sent
+                # NAK to asterisk.
+                redis_cache = RedisClusterCache()
+                if redis_cache.exists(unique_key):
+                    redis_cache.set(unique_key, "Removed")
                 device.delete()
 
         if result.get('canonical_ids'):
