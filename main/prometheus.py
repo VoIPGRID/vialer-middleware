@@ -98,7 +98,7 @@ VIALER_MIDDLEWARE_PUSH_NOTIFICATION_SUCCESS_TOTAL = Counter(
     ['os', 'direction'],
 )
 
-VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL = Counter(
+VIALER_MIDDLEWARE_INCOMING_CALL_SUCCESS_TOTAL = Counter(
     VIALER_MIDDLEWARE_INCOMING_CALL_SUCCESS_TOTAL_KEY,
     'The amount of times an incoming call was presented at the middleware',
     ['os', 'action'],
@@ -322,7 +322,7 @@ def increment_vialer_middleware_incoming_call_metric_counter():
     for value_str in data_list:
         # Parse the string to a dict.
         value_dict = literal_eval(value_str)
-        VIALER_MIDDLEWARE_INCOMING_CALL_TOTAL.labels(
+        VIALER_MIDDLEWARE_INCOMING_CALL_SUCCESS_TOTAL.labels(
             os=value_dict[OS_KEY],
             action=value_dict[ACTION_KEY],
         ).inc()
