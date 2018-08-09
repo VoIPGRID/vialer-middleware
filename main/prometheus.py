@@ -15,7 +15,7 @@ from random import randint, random
 import time
 
 from django.conf import settings
-from django.db import DatabaseError
+from django.db import connection, DatabaseError
 from prometheus_client import Counter, Gauge, start_http_server
 from raven.contrib.django.models import client as raven_client
 from redis import RedisError
@@ -142,12 +142,21 @@ def write_read_orm():
     random_available = random() > 0.5
 
     try:
+        connection.ensure_connection()
+    except:
+        raven_client.captureException()
+        return False
+
+    try:
         response_log = ResponseLog.objects.create(
             platform=GCM_PLATFORM,
             roundtrip_time=random_roundtrip,
             available=random_available,
         )
     except DatabaseError:
+        connection.close()
+
+        raven_client.captureException()
         return False
     else:
         if response_log.available == random_available and response_log.roundtrip_time == random_roundtrip:
