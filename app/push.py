@@ -387,7 +387,7 @@ def get_apns2_connection(app, device, unique_key):
     global apns2_connection
     if apns2_connection is None:
         full_cert_path = os.path.join(settings.CERT_DIR, app.push_key)
-        apns2_connection = APNsClient(full_cert_path, use_sandbox=True)
+        apns2_connection = APNsClient(full_cert_path, use_sandbox=settings.APNS_IS_SANDBOX)
         log_middleware_information(
             '{0} | Opened new connection to APNSv2',
             OrderedDict([
