@@ -364,9 +364,10 @@ def send_apns2_message(device, app, message_type, data=None):
         )
 
 
-# The APNSv2 connection. This connection can be shared among multiple threads.
-# Don't use this directly but use `get_apns2_connection`.
-apns2_connection = None
+# The APNSv2 connection pool. The connection pool stores an APNSv2 connection for
+# an app_id. This connection pool can be shared among multiple threads.
+# Don't use the connection pool directly but use `get_apns2_connection`.
+apns2_connection_pool = {}
 
 
 def get_apns2_connection(app, device, unique_key):
@@ -384,20 +385,25 @@ def get_apns2_connection(app, device, unique_key):
     Returns:
         APNsClient.
     """
-    global apns2_connection
-    if apns2_connection is None:
+    global apns2_connection_pool
+    if app.app_id not in apns2_connection_pool:
         full_cert_path = os.path.join(settings.CERT_DIR, app.push_key)
         apns2_connection = APNsClient(full_cert_path, use_sandbox=settings.APNS_IS_SANDBOX)
         log_middleware_information(
-            '{0} | Opened new connection to APNSv2',
+            '{0} | Opened new connection to APNSv2 for app_id: {1}',
             OrderedDict([
                 ('token', unique_key),
+                ('app_id', app.app_id),
             ]),
             logging.INFO,
             device=device,
         )
+        apns2_connection_pool.update({
+            app.app_id: apns2_connection
+        })
     else:
         # Test the existing connection, will throw an exception if this fails.
+        apns2_connection = apns2_connection_pool[app.app_id]
         apns2_connection.connect()
 
     return apns2_connection
