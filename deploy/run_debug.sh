@@ -32,7 +32,7 @@ echo "DB server up and running."
 python /usr/src/app/manage.py migrate --noinput
 
 # Start prometheus webserver and healthcheck the platform
-python /usr/src/app/main/prometheus.py &
+python /usr/src/app/main/prometheus/prometheus.py &
 
 # Run via debug server
 echo "Running in Debug mode"

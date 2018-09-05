@@ -1,4 +1,4 @@
-from main.prometheus import (
+from main.prometheus.consts import (
     APP_VERSION_KEY,
     CONNECTION_TYPE_KEY,
     DIRECTION_KEY,

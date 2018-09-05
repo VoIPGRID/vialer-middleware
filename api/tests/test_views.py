@@ -12,7 +12,7 @@ from testfixtures import LogCapture
 
 from app.cache import RedisClusterCache
 from app.models import App, Device, ResponseLog
-from main.prometheus import (
+from main.prometheus.consts import (
     APP_VERSION_KEY,
     CALL_SETUP_SUCCESSFUL_KEY,
     CONNECTION_TYPE_KEY,
