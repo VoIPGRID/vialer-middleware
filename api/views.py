@@ -24,7 +24,7 @@ from app.utils import (
     log_data_to_metrics_log,
     log_middleware_information,
     LOG_SIP_USER_ID)
-from main.prometheus import (
+from main.prometheus.consts import (
     ACTION_KEY,
     CALL_SETUP_SUCCESSFUL_KEY,
     DIRECTION_KEY,

@@ -33,7 +33,7 @@ python /usr/src/app/manage.py migrate --noinput
 python /usr/src/app/manage.py collectstatic --noinput
 
 # Start prometheus webserver and healthcheck the platform
-python /usr/src/app/main/prometheus.py &
+python /usr/src/app/main/prometheus/prometheus.py &
 
 # Run via debugging server
 exec /usr/local/bin/uwsgi /usr/src/app/deploy/uwsgi.ini
