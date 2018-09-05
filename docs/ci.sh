@@ -15,6 +15,8 @@ docker-compose build
 
 # Wait for db service to be fully initialized.
 docker-compose run --rm app ls
+# Cleanup beforehand
+docker-compose run --no-deps --rm app find . -name __pycache__ -exec rm -fr {} \;
 sleep 10
 
 # Run the tests, but disable aborting the script on errors.
