@@ -13,10 +13,13 @@ docker-compose kill
 docker-compose rm -vf
 docker-compose build
 
+# Flake8
+docker-compose run --no-deps --rm app flake8 --exit-zero  > flake8.txt
+
 # Wait for db service to be fully initialized.
 docker-compose run --rm app ls
 # Cleanup beforehand
-docker-compose run --no-deps --rm app find . -name __pycache__ | xargs rm -rf;
+docker-compose run --no-deps --rm app bash -c 'find . -name __pycache__ -o -name .coverage | xargs rm -rf;'
 sleep 10
 
 # Run the tests, but disable aborting the script on errors.
