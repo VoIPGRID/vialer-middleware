@@ -162,10 +162,16 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler',
             'include_html': True,
         },
+        'syslog': {
+            'address': '/dev/log',
+            'class': 'logging.handlers.SysLogHandler',
+            'formatter': 'verbose',
+            'level': 'DEBUG',
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file', 'mail_admins'],
+            'handlers': ['console', 'file', 'mail_admins', 'syslog'],
             'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
         },
         'logentries': {
@@ -173,11 +179,17 @@ LOGGING = {
             'level': 'INFO',
         },
         'metrics': {
-            'handlers': ['metrics_file'],
+            'handlers': ['metrics_file', 'syslog'],
             'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
         },
     },
 }
+
+# Docker does not like the address of the SysLogHandler.
+if DEBUG:
+    for name, handler in LOGGING['handlers'].items():
+        if handler['class'] == 'logging.handlers.SysLogHandler':
+            del handler['address']
 
 DATABASES = {
     'default': {
