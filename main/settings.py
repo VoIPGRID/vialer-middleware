@@ -143,8 +143,10 @@ LOGGING = {
             'tags': {'custom-tag': 'x'},
         },
         'console': {
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+            'stream': sys.stdout,
         },
         'file': {
             'class': 'logging.FileHandler',
@@ -173,7 +175,7 @@ LOGGING = {
             'level': 'INFO',
         },
         'metrics': {
-            'handlers': ['metrics_file'],
+            'handlers': ['console', 'metrics_file'],
             'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
         },
     },
