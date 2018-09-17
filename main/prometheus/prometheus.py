@@ -45,7 +45,6 @@ from main.prometheus.consts import (
 # Middleware health metrics.
 MYSQL_HEALTH = Gauge('mysql_health', 'See if MySQL is still reachable through the ORM.')
 REDIS_CLUSTER_CLIENT = RedisClusterCache()
-REDIS_KEY = 'test_if_redis_works'
 REDIS_HEALTH = Gauge('redis_health', 'See if Redis is still reachable.')
 DOCKER_TAG = Counter('docker_tag', 'See which docker tag is running.', ['docker_tag'])
 
@@ -95,24 +94,18 @@ VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL = Counter(
 )
 
 
-def write_read_redis():
+def ping_redis():
     """
     Write a key value to Redis to see if it is up
 
     Returns:
         bool: True if we can read and write to Redis
     """
-    random_value = str(randint(1, 1000))
-
-    try:
-        REDIS_CLUSTER_CLIENT.set(REDIS_KEY, random_value)
-    except Exception:
-        return False
-    else:
-        if REDIS_CLUSTER_CLIENT.get(REDIS_KEY) == random_value:
-            REDIS_CLUSTER_CLIENT.client.delete(REDIS_KEY)
-            return True
-        return False
+    result = REDIS_CLUSTER_CLIENT.execute_command('PING')
+    for key, value in result.items():
+        if value is False:
+            return False
+    return True
 
 
 def write_read_orm():
@@ -365,7 +358,7 @@ if __name__ == '__main__':
     is_redis_down = False
     DOCKER_TAG.labels(docker_tag=settings.DOCKER_TAG).inc()
     while True:
-        redis = write_read_redis()
+        redis = ping_redis()
         orm = write_read_orm()
         if redis:
             REDIS_HEALTH.set(1)
