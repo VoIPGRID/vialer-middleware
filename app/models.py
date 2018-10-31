@@ -33,7 +33,7 @@ class Device(models.Model):
     Model for all device who register at the middleware.
     """
     name = models.CharField(max_length=255, blank=True, null=True)
-    sip_user_id = models.CharField(max_length=255, unique=True)
+    sip_user_id = models.CharField(max_length=255, unique=True, primary_key=True)
     os_version = models.CharField(max_length=255, blank=True, null=True)
     client_version = models.CharField(max_length=255, blank=True, null=True)
     token = models.CharField(max_length=250)
