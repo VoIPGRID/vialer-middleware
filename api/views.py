@@ -467,18 +467,13 @@ class DeviceView(VialerAPIView):
 
         app = get_object_or_404(App, app_id=app_id, platform=platform)
 
-        created = False
-
-        try:
-            device = Device.objects.get(sip_user_id=sip_user_id)
-        except Device.DoesNotExist:
-            device = Device.objects.create(
-                sip_user_id=sip_user_id,
-                app_id=app.id,
-                token=token,
-                remote_logging_id=remote_logging_id,
-            )
-            created = True
+        device, created = Device.objects.update_or_create(
+            sip_user_id=sip_user_id,
+            defaults={
+                'app_id': app.id,
+                'token': token,
+                'remote_logging_id': remote_logging_id,
+            })
 
         # Track status.
         status = 'OK'
