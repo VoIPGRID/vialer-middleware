@@ -35,5 +35,5 @@ python /usr/src/app/manage.py collectstatic --noinput
 # Start prometheus webserver and healthcheck the platform
 python /usr/src/app/main/prometheus/prometheus.py &
 
-# Run via debugging server
-exec /usr/local/bin/uwsgi /usr/src/app/deploy/uwsgi.ini
+# Run
+exec /usr/local/bin/gunicorn --bind 0.0.0.0:8000 -w 1 -k gevent main.wsgi:application
