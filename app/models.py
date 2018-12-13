@@ -32,9 +32,6 @@ class Device(models.Model):
     """
     Model for all device who register at the middleware.
     """
-    # FIXME: We need this to be backwards compatible for one release.
-    id = models.CharField(max_length=255, unique=True)
-
     name = models.CharField(max_length=255, blank=True, null=True)
     sip_user_id = models.CharField(max_length=255, unique=True, primary_key=True)
     os_version = models.CharField(max_length=255, blank=True, null=True)
@@ -48,17 +45,6 @@ class Device(models.Model):
 
     def __str__(self):
         return '{0} - {1}'.format(self.sip_user_id, self.name)
-
-    # FIXME: We need this to be backwards compatible for one release.
-    def save(self, *args, **kwargs):
-        """
-        Make sure the id fields stays the same as sip_user_id so we are
-        backwards compatible.
-        """
-        if self.sip_user_id:
-            self.id = self.sip_user_id
-            obj = super(Device, self).save(*args, **kwargs)
-            return obj
 
 
 class ResponseLog(models.Model):
