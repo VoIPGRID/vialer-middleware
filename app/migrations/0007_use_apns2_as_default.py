@@ -28,7 +28,7 @@ def backwards(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('app', '0005_use_sip_user_id_as_pk_for_device'),
+        ('app', '0006_remove_id_field'),
     ]
 
     operations = [migrations.RunPython(forwards, backwards)]
