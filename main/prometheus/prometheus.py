@@ -101,10 +101,13 @@ def ping_redis():
     Returns:
         bool: True if we can read and write to Redis
     """
-    result = REDIS_CLUSTER_CLIENT.client.execute_command('PING')
-    for key, value in result.items():
-        if value is False:
-            return False
+    try:
+        result = REDIS_CLUSTER_CLIENT.client.execute_command('PING')
+        for key, value in result.items():
+            if value is False:
+                return False
+    except:
+        return False
     return True
 
 
