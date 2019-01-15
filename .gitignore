@@ -8,7 +8,8 @@
 /mysql
 coverage.xml
 xunit.xml
-
+/main/local.py
+flake8.txt
 # To avoid conflicts between dev en live yml.
 production.yml
 

@@ -26,6 +26,7 @@ class DeviceSerializer(TokenSerializer, SipUserIdSerializer):
     client_version = serializers.CharField(max_length=255, allow_blank=True, required=False)
     app = serializers.CharField(max_length=255)
     sandbox = serializers.BooleanField(default=False)
+    remote_logging_id = serializers.CharField(max_length=255, allow_blank=True, required=False)
 
 
 class DeleteDeviceSerializer(TokenSerializer, SipUserIdSerializer):
@@ -51,3 +52,8 @@ class IncomingCallSerializer(SipUserIdSerializer):
     caller_id = serializers.CharField(max_length=255, default='', allow_blank=True)
     phonenumber = serializers.CharField(max_length=32, validators=[phone_number_validator])
     call_id = serializers.CharField(max_length=255, default=None, allow_blank=True)
+
+
+class HangupReasonSerializer(SipUserIdSerializer):
+    unique_key = serializers.CharField(max_length=255)
+    reason = serializers.CharField(max_length=None, default=None, allow_blank=True)

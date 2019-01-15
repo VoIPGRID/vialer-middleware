@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'app',
     'api',
     'django_nose',
+    'django_extensions',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -50,6 +51,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
@@ -115,6 +117,8 @@ APP_API_URL = os.environ.get('APP_API_URL')
 APP_PUSH_ROUNDTRIP_WAIT = int(os.environ.get('APP_PUSH_ROUNDTRIP_WAIT', 4000))
 APP_PUSH_RESEND_INTERVAL = int(os.environ.get('APP_PUSH_RESEND_INTERVAL', 1000))
 
+APNS_IS_SANDBOX = False
+
 LOGGING_DIR = os.environ.get('LOGGING_DIR', '/var/log/middleware')
 LOG_SOURCE = 'web-app'
 
@@ -125,13 +129,13 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(levelname)s {0} %(asctime)s %(message)s'.format(LOG_SOURCE)
+            'format': '%(levelname)s {0} %(asctime)s %(message)s'.format(LOG_SOURCE),
         },
     },
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse',
-        }
+        },
     },
     'handlers': {
         'sentry': {
@@ -140,13 +144,20 @@ LOGGING = {
             'tags': {'custom-tag': 'x'},
         },
         'console': {
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+            'stream': sys.stdout,
         },
         'file': {
             'class': 'logging.FileHandler',
             'formatter': 'verbose',
             'filename': os.path.join(LOGGING_DIR, 'middleware.log'),
+        },
+        'metrics_file': {
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': os.path.join(LOGGING_DIR, 'metrics.log'),
         },
         'mail_admins': {
             'level': 'ERROR',
@@ -160,6 +171,14 @@ LOGGING = {
             'handlers': ['console', 'file', 'mail_admins'],
             'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
         },
+        'logentries': {
+            'handlers': [],
+            'level': 'INFO',
+        },
+        'metrics': {
+            'handlers': ['console', 'metrics_file'],
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+        },
     },
 }
 
@@ -170,8 +189,8 @@ DATABASES = {
         'USER': os.environ.get('DB_ENV_USER', 'dev'),
         'PASSWORD': os.environ.get('DB_ENV_PASSWORD', 'dev1234'),
         'HOST': os.environ.get('DB_ENV_HOST', 'db'),
-        'PORT': os.environ.get('DB_ENV_PORT', '3306'),
-    }
+        'PORT': os.environ.get('DB_ENV_PORT', '4040'),
+    },
 }
 
 # VG stands for VoIPGRID. This is the platform that handles all the sip
@@ -187,4 +206,14 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 RAVEN_CONFIG = {
     'dsn': os.environ.get('SENTRY_DSN', None),
+    'transport': 'raven.transport.requests.RequestsHTTPTransport',
 }
+
+PROMETHEUS_PORT = os.environ.get('PROMETHEUS_PORT', '9000')
+
+DOCKER_TAG = os.environ.get('DOCKER_TAG', 'Unknown')
+
+try:
+    from .local import *  # noqa
+except ImportError:
+    pass

@@ -21,6 +21,7 @@ app:
   # Expose internal port 8000 to external 8007.
   ports:
    - 8007:8000
+   - 9000:9000
 
   # Read the .env file for variables. This makes the .env file
   # required in the codebase!
@@ -33,6 +34,9 @@ app:
    - DB_ENV_USER=dev
    - DB_ENV_PASSWORD=dev1234
    - DB_ENV_HOST=db
+   - DB_ENV_PORT=3306
+   - PROMETHEUS_PORT=9000
+   - DOCKER_TAG=development
 
   # Map log files from container to local disk.
   volumes:

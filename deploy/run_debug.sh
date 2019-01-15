@@ -5,7 +5,7 @@ check_up() {
     host=$2
     port=$3
 
-    max=13 # 1 minute
+    max=1000000 # Stop the docker container from restarting when in debug mode.
 
     counter=1
     while true;do
@@ -13,7 +13,7 @@ check_up() {
         >/dev/null 2>/dev/null && break || \
         echo "Waiting that $service on ${host}:${port} is started (sleeping for 5)"
 
-        if [[ "${counter}" == "${max}" ]];then
+        if [ ${counter} -eq ${max} ];then
             echo "Could not connect to ${service} after some time"
             echo "Investigate locally the logs with fig logs"
             exit 1
@@ -21,7 +21,7 @@ check_up() {
 
         sleep 5
 
-        (( counter++ ))
+        counter=$((counter+1))
     done
 }
 
@@ -30,6 +30,9 @@ echo "DB server up and running."
 
 # Setup DB
 python /usr/src/app/manage.py migrate --noinput
+
+# Start prometheus webserver and healthcheck the platform
+python /usr/src/app/main/prometheus/prometheus.py &
 
 # Run via debug server
 echo "Running in Debug mode"
