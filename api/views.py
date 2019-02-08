@@ -50,7 +50,7 @@ from .serializers import (
     DeviceSerializer,
     HangupReasonSerializer,
     IncomingCallSerializer,
-)
+    SipUserIdSerializer)
 
 logger = logging.getLogger('django')
 
@@ -641,5 +641,36 @@ class LogMetricsView(VialerAPIView):
                 redis_cache.client.rpush(VIALER_CALL_FAILURE_TOTAL_KEY, metric_data)
 
         log_data_to_metrics_log(json_data, json_data.get(LOG_SIP_USER_ID))
+
+        return Response(status=HTTP_200_OK)
+
+
+class CheckInView(VialerAPIView):
+    """
+    View to update when a device has last been seen.
+    """
+    serializer_class = SipUserIdSerializer
+    authentication_classes = (VoipgridAuthentication,)
+
+    def post(self, request):
+        """
+        Post view to update the last_seen field on a device.
+
+        Args:
+            request (Request): Containing the post data.
+
+        Returns:
+            Response: 200 if OK 404 if the device has not been found.
+        """
+        serialized_data = self._serialize_request(request)
+
+        sip_user_id = serialized_data['sip_user_id']
+        try:
+            device = Device.objects.get(sip_user_id=sip_user_id)
+        except Device.DoesNotExist:
+            return Response(status=HTTP_404_NOT_FOUND)
+        else:
+            device.last_seen = timezone.now()
+            device.save()
 
         return Response(status=HTTP_200_OK)
