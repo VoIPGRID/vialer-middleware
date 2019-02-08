@@ -2,6 +2,7 @@ from collections import OrderedDict
 import datetime
 import logging
 import random
+import requests
 import time
 
 from django.conf import settings
@@ -461,6 +462,7 @@ class DeviceView(VialerAPIView):
         serialized_data = self._serialize_request(request)
 
         token = serialized_data['token']
+        pushy_token = serialized_data.get('pushy_token')
         sip_user_id = serialized_data['sip_user_id']
         app_id = serialized_data['app']
         remote_logging_id = serialized_data.get('remote_logging_id')
@@ -472,6 +474,7 @@ class DeviceView(VialerAPIView):
             defaults={
                 'app_id': app.id,
                 'token': token,
+                'pushy_token': pushy_token,
                 'remote_logging_id': remote_logging_id,
             })
 
@@ -486,6 +489,13 @@ class DeviceView(VialerAPIView):
             else:
                 status += ' and updated token'
             device.token = token
+
+        if device.pushy_token != pushy_token:
+            if pushy_token:
+                status += ', updated pushy token'
+            else:
+                status += ', removed pushy token'
+            device.pushy_token = pushy_token
 
         # Update remote_logging_id.
         if device.remote_logging_id != remote_logging_id:

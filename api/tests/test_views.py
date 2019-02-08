@@ -23,7 +23,12 @@ from main.prometheus.consts import (
     NETWORK_OPERATOR_KEY,
     OS_KEY,
     OS_VERSION_KEY)
-from .utils import mocked_send_apns_message, mocked_send_fcm_message, ThreadWithReturn
+from .utils import (
+    mocked_send_apns_message,
+    mocked_send_fcm_message,
+    mocked_send_pushy_message,
+    ThreadWithReturn,
+)
 
 
 class RegisterDeviceTest(TestCase):
@@ -46,6 +51,8 @@ class RegisterDeviceTest(TestCase):
 
         self.ios_url = '/api/apns-device/'
         self.android_url = '/api/android-device/'
+
+        cache.clear()
 
     @mock.patch('app.push.send_apns_message', side_effect=mocked_send_apns_message)
     def test_register_apns_device(self, *mocks):
@@ -184,6 +191,8 @@ class IOSIncomingCallTest(TransactionTestCase):
 
         self.ios_app, created = App.objects.get_or_create(platform='apns', app_id='com.voipgrid.vialer')
 
+        cache.clear()
+
     @mock.patch('app.push.send_apns_message', side_effect=mocked_send_apns_message)
     def test_available_incoming_call(self, *mocks):
         """
@@ -204,6 +213,7 @@ class IOSIncomingCallTest(TransactionTestCase):
         Device.objects.create(
             name='test device',
             token='a652aee84bdec6c2859eec89a6e5b1a42c400fba43070f404148f27b502610b6',
+            pushy_token=None,
             sip_user_id='123456789',
             os_version='8.3',
             client_version='1.0',
@@ -232,6 +242,7 @@ class IOSIncomingCallTest(TransactionTestCase):
         # Check if incoming-call got accepted.
         self.assertEqual(response.content, b'status=ACK')
         self.assertEqual(cache.get('attempts'), 2)
+        self.assertEqual(cache.get('pushy_attempts', 0), 0)
 
     @mock.patch('app.push.send_apns_message', side_effect=mocked_send_apns_message)
     def test_not_available_incoming_call(self, *mocks):
@@ -399,6 +410,8 @@ class AndroidIncomingCallTest(TransactionTestCase):
 
         self.android_app, created = App.objects.get_or_create(platform='android', app_id='com.voipgrid.vialer')
 
+        cache.clear()
+
     @mock.patch('app.push.send_fcm_message', side_effect=mocked_send_fcm_message)
     def test_available_incoming_call(self, *mocks):
         """
@@ -418,6 +431,7 @@ class AndroidIncomingCallTest(TransactionTestCase):
         Device.objects.create(
             name='test device',
             token='a652aee84bdec6c2859eec89a6e5b1a42c400fba43070f404148f27b502610b6',
+            pushy_token=None,
             sip_user_id='123456789',
             os_version='8.3',
             client_version='1.0',
@@ -446,6 +460,7 @@ class AndroidIncomingCallTest(TransactionTestCase):
         # Check if incoming-call got accepted.
         self.assertEqual(response.content, b'status=ACK')
         self.assertEqual(cache.get('attempts'), 2)
+        self.assertEqual(cache.get('pushy_attempts', 0), 0)
 
     @mock.patch('app.push.send_fcm_message', side_effect=mocked_send_fcm_message)
     def test_not_available_incoming_call(self, *mocks):
@@ -625,6 +640,8 @@ class HangupReasonTest(TestCase):
 
         self.hangup_reason_url = '/api/hangup-reason/'
 
+        cache.clear()
+
     @freeze_time('2018-01-01 12:00:00.133700')
     def test_if_the_reason_is_logged_correctly(self):
         """
@@ -664,6 +681,119 @@ class HangupReasonTest(TestCase):
                 'Not Found: /api/hangup-reason/',
             ),
         )
+
+
+class PushyIncomingCallTest(TransactionTestCase):
+
+    def setUp(self):
+        super(PushyIncomingCallTest, self).setUp()
+        self.client = APIClient()
+
+        # URL's.
+        self.response_url = '/api/call-response/'
+        self.incoming_url = '/api/incoming-call/'
+
+        self.android_app, created = App.objects.get_or_create(platform='android', app_id='com.voipgrid.vialer')
+
+        cache.clear()
+
+    @mock.patch('app.push.send_fcm_message', side_effect=mocked_send_fcm_message)
+    @mock.patch('app.push.send_pushy_message', side_effect=mocked_send_pushy_message)
+    def test_available_incoming_call(self, *mocks):
+        """
+        Test a call when the device is available (default).
+        """
+        call_data = {
+            'sip_user_id': '123456789',
+            'caller_id': 'Test name',
+            'phonenumber': '0123456789',
+        }
+
+        # Call non existing device.
+        response = self.client.post(self.incoming_url, call_data)
+        self.assertEqual(response.content, b'status=NAK')
+
+        two_weeks_ago = datetime.now() - timedelta(days=14)
+        Device.objects.create(
+            name='test device',
+            token='a652aee84bdec6c2859eec89a6e5b1a42c400fba43070f404148f27b502610b6',
+            pushy_token='xyz',
+            sip_user_id='123456789',
+            os_version='8.3',
+            client_version='1.0',
+            last_seen=two_weeks_ago,
+            app=self.android_app,
+        )
+        call_data['call_id'] = 'asdr2378945auhfjkasdghf897eoiehajklh'
+
+        # Now the device exists, call it again in seperate thread.
+        thread = ThreadWithReturn(target=self.client.post, args=(self.incoming_url, call_data))
+        thread.start()
+
+        # Simulate some wait-time before device responds.
+        time.sleep(1.5)
+
+        app_data = {
+            'unique_key': call_data['call_id'],
+            'message_start_time': time.time(),
+        }
+        # Send the fake response from device.
+        self.client.post(self.response_url, app_data)
+
+        # Wait for the incoming-call to finish.
+        response = thread.join()
+
+        # Check if incoming-call got accepted.
+        self.assertEqual(response.content, b'status=ACK')
+        self.assertEqual(cache.get('attempts'), 2)
+        self.assertEqual(cache.get('pushy_attempts', 0), 2)
+
+    @mock.patch('app.push.send_fcm_message', side_effect=mocked_send_fcm_message)
+    def test_not_available_incoming_call(self, *mocks):
+        """
+        Test a call when device is not available.
+        """
+        call_data = {
+            'sip_user_id': '123456789',
+            'caller_id': 'Test name',
+            'phonenumber': '0123456789',
+        }
+
+        two_weeks_ago = datetime.now() - timedelta(days=14)
+        Device.objects.create(
+            name='test device',
+            token='a652aee84bdec6c2859eec89a6e5b1a42c400fba43070f404148f27b502610b6',
+            pushy_token='xyz',
+            sip_user_id='123456789',
+            os_version='8.3',
+            client_version='1.0',
+            last_seen=two_weeks_ago,
+            app=self.android_app,
+        )
+        call_data['call_id'] = 'asdr2378945auhfjkasdghf897eoiehajklh'
+
+        # Now the device exists, call it again in seperate thread.
+        thread = ThreadWithReturn(target=self.client.post, args=(self.incoming_url, call_data))
+        thread.start()
+
+        # Simulate some wait-time before device responds.
+        time.sleep(1.5)
+
+        app_data = {
+            'unique_key': call_data['call_id'],
+            'message_start_time': time.time(),
+            'available': False,
+        }
+        # Send the fake response from device.
+        self.client.post(self.response_url, app_data)
+
+        # Wait for the incoming-call to finish.
+        response = thread.join()
+
+        # Check if incoming-call got accepted.
+        self.assertEqual(response.content, b'status=NAK')
+        self.assertEqual(cache.get('attempts'), 2)
+        self.assertEqual(cache.get('pushy_attempts', 0), 2)
 
 
 class LogMetricsTest(TestCase):

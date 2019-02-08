@@ -15,6 +15,12 @@ def mocked_send_fcm_message(device, app, message_type, data=None):
     print(data.get('attempt', 1))
 
 
+def mocked_send_pushy_message(device, app, message_type, data=None):
+    cache.set('pushy_attempts', data.get('attempt', 1), 300)
+    print('WORKED PUSHY')
+    print(data.get('attempt', 1))
+
+
 class ThreadWithReturn(Thread):
     def __init__(self, *args, **kwargs):
         super(ThreadWithReturn, self).__init__(*args, **kwargs)

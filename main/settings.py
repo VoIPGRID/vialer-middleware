@@ -113,6 +113,10 @@ APP_API_URL = os.environ.get('APP_API_URL')
 APP_PUSH_ROUNDTRIP_WAIT = int(os.environ.get('APP_PUSH_ROUNDTRIP_WAIT', 4000))
 APP_PUSH_RESEND_INTERVAL = int(os.environ.get('APP_PUSH_RESEND_INTERVAL', 1000))
 
+APNS_IS_SANDBOX = False
+
+PUSHY_API_KEY = os.environ.get('PUSHY_API_KEY')
+
 LOGGING_DIR = os.environ.get('LOGGING_DIR', '/var/log/middleware')
 LOG_SOURCE = 'web-app'
 

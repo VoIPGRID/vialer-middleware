@@ -40,6 +40,7 @@ class Device(models.Model):
     os_version = models.CharField(max_length=255, blank=True, null=True)
     client_version = models.CharField(max_length=255, blank=True, null=True)
     token = models.CharField(max_length=250)
+    pushy_token = models.CharField(max_length=250, null=True)
     sandbox = models.BooleanField(default=False)
     last_seen = models.DateTimeField(blank=True, null=True)
     app = models.ForeignKey(App)

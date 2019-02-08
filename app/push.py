@@ -4,6 +4,7 @@ import logging
 import os
 from time import time
 from urllib.parse import urljoin
+import requests
 
 from apns2.client import APNsClient
 from apns2.errors import APNsException, BadDeviceToken, DeviceTokenNotForTopic, Unregistered
@@ -57,6 +58,10 @@ def send_call_message(device, unique_key, phonenumber, caller_id, attempt):
             logging.WARNING,
             device=device,
         )
+        return
+
+    if device.pushy_token:
+        send_pushy_message(device, device.app, TYPE_CALL, data)
 
 
 def send_text_message(device, app, message):
@@ -83,6 +88,10 @@ def send_text_message(device, app, message):
             logging.WARNING,
             device=device,
         )
+        return
+
+    if device.pushy_token:
+        send_pushy_message(device, app, TYPE_MESSAGE, {'message': message})
 
 
 def get_call_push_payload(unique_key, phonenumber, caller_id, attempt):
@@ -505,6 +514,75 @@ def send_gcm_message(device, app, message_type, data=None):
             '{0} | Error sending GCM message',
             OrderedDict([
                 ('unique_key', unique_key),
+            ]),
+            logging.CRITICAL,
+            device=device,
+        )
+
+def send_pushy_message(device, app, message_type, data=None):
+    """
+    Send a Pushy message.
+    """
+    unique_key = device.pushy_token
+
+    if message_type == TYPE_CALL:
+        unique_key = data['unique_key']
+        message = get_call_push_payload(
+            unique_key,
+            data['phonenumber'],
+            data['caller_id'],
+            data['attempt'],
+        )
+    elif message_type == TYPE_MESSAGE:
+        message = get_message_push_payload(data['message'])
+    else:
+        log_middleware_information(
+            '{0} | Trying to sent message of unknown type: {1}',
+            OrderedDict([
+                ('unique_key', unique_key),
+                ('message_type', message_type),
+            ]),
+            logging.WARNING,
+            device=device,
+        )
+
+    post_data = {
+        'to': [device.pushy_token],
+        'data': message,
+    }
+
+    try:
+        api_key = settings.PUSHY_API_KEY
+        response = requests.post('https://api.pushy.me/push?api_key=' + api_key, data=json.dumps(data))
+        if r.status_code == requests.codes.ok:
+            log_middleware_information(
+                '{0} | Pushy \'{1}\' message sent at time:{2}',
+                OrderedDict([
+                    ('unique_key', unique_key),
+                    ('message_type', message_type),
+                    ('sent_time', datetime.datetime.fromtimestamp(start_time).strftime('%H:%M:%S.%f')),
+                ]),
+                logging.INFO,
+                device=device,
+            )
+        else:
+            log_middleware_information(
+                '{0} | Sending Pushy message failed for device: {1}, reason: HTTP {2}: {3}',
+                OrderedDict([
+                    ('unique_key', unique_key),
+                    ('token', device.pushy_token),
+                    ('status_code', response.status_code),
+                    ('error_msg', response.json().get('error')),
+                ]),
+                logging.WARNING,
+                device=device,
+            )
+    except Exception as ex:
+        log_middleware_information(
+            '{0} | Error sending Pushy message: {1}',
+            OrderedDict([
+                ('unique_key', unique_key),
+                ('error', str(ex)),
             ]),
             logging.CRITICAL,
             device=device,
