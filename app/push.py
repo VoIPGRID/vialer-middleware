@@ -241,10 +241,11 @@ apns2_connection_pool = {}
 
 def get_apns2_connection(app, device, unique_key):
     """
-    Get the active APNSv2 connection.
+    Get the active APNSv2 connection for the device.
 
-    This returns a reference to the global connection object,
-    and initializes it if the connection was not yet made.
+    This returns a reference to the connection object
+    for the app and with the device's sandbox setting.
+    Initializes the connection if it was not yet set up.
 
     Args:
         app (App): App requesting the connection.
@@ -255,24 +256,26 @@ def get_apns2_connection(app, device, unique_key):
         APNsClient.
     """
     global apns2_connection_pool
-    if app.app_id not in apns2_connection_pool:
+    key = (app.app_id, device.sandbox)
+    if key not in apns2_connection_pool:
         full_cert_path = os.path.join(settings.CERT_DIR, app.push_key)
-        apns2_connection = APNsClient(full_cert_path, use_sandbox=settings.APNS_IS_SANDBOX)
+        apns2_connection = APNsClient(full_cert_path, use_sandbox=device.sandbox)
         log_middleware_information(
-            '{0} | Opened new connection to APNSv2 for app_id: {1}',
+            '{0} | Opened new connection to APNSv2 {1} for app_id: {2}',
             OrderedDict([
                 ('token', unique_key),
+                ('sandbox', 'Sandbox' if device.sandbox else 'Production'),
                 ('app_id', app.app_id),
             ]),
             logging.INFO,
             device=device,
         )
         apns2_connection_pool.update({
-            app.app_id: apns2_connection
+            key: apns2_connection
         })
     else:
         # Test the existing connection, will throw an exception if this fails.
-        apns2_connection = apns2_connection_pool[app.app_id]
+        apns2_connection = apns2_connection_pool[key]
         apns2_connection.connect()
 
     return apns2_connection
