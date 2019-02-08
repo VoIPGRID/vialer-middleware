@@ -771,3 +771,53 @@ class LogMetricsTest(TestCase):
         self.assertEquals(self.data[DIRECTION_KEY], value_dict[DIRECTION_KEY])
         self.assertEquals(self.data[HANGUP_REASON_KEY], value_dict[HANGUP_REASON_KEY])
         self.assertEquals(self.data[NETWORK_OPERATOR_KEY], value_dict[NETWORK_OPERATOR_KEY])
+
+
+class CheckInTest(TestCase):
+    def setUp(self):
+        """
+        Initialize the data we need for the tests.
+        """
+        super(CheckInTest, self).setUp()
+        self.client = APIClient()
+
+        self.ios_app, created = App.objects.get_or_create(platform='apns', app_id='com.voipgrid.vialer')
+        self.last_seen_date = datetime(2018, 1, 1)
+        self.device = Device.objects.create(
+            name='test device',
+            token='a652aee84bdec6c2859eec89a6e5b1a42c400fba43070f404148f27b502610b6',
+            sip_user_id='123456789',
+            os_version='8.3',
+            client_version='1.0',
+            app=self.ios_app,
+            last_seen=self.last_seen_date,
+        )
+        self.data = {
+            'sip_user_id': '123456789',
+        }
+
+        self.check_in_url = '/api/check-in/'
+
+    @freeze_time(datetime(2019, 1, 1))
+    def test_device_last_seen_is_updated(self):
+        """
+        Test if the last_seen field of a device is updated correctly.
+        """
+        response = self.client.post(self.check_in_url, self.data)
+
+        self.assertEquals(response.status_code, 200)
+        self.device.refresh_from_db()
+        self.assertEquals(self.device.last_seen, datetime.now())
+
+    def test_404_is_returned_when_device_not_found(self):
+        """
+        Test that a 404 is returned when a device is not found.
+        """
+        data = {
+            'sip_user_id': '987654321',
+        }
+        response = self.client.post(self.check_in_url, data)
+
+        self.assertEquals(response.status_code, 404)
+        self.device.refresh_from_db()
+        self.assertEquals(self.device.last_seen, self.last_seen_date)
