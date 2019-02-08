@@ -20,12 +20,12 @@ def get_metrics_base_data(json_data):
         dict: Dict in the format we can store in Redis.
     """
     metrics_dict = {
-        OS_KEY: json_data.get(OS_KEY),
-        OS_VERSION_KEY: json_data.get(OS_VERSION_KEY),
         APP_VERSION_KEY: json_data.get(APP_VERSION_KEY),
-        NETWORK_KEY: json_data.get(NETWORK_KEY),
         CONNECTION_TYPE_KEY: json_data.get(CONNECTION_TYPE_KEY),
         DIRECTION_KEY: json_data.get(DIRECTION_KEY),
+        NETWORK_KEY: json_data.get(NETWORK_KEY),
+        OS_KEY: json_data.get(OS_KEY),
+        OS_VERSION_KEY: json_data.get(OS_VERSION_KEY),
     }
 
     if json_data.get(NETWORK_KEY, '').lower() != 'wifi':

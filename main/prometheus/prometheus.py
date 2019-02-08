@@ -26,10 +26,12 @@ from app.models import GCM_PLATFORM, ResponseLog
 from main.prometheus.consts import (
     ACTION_KEY,
     APP_VERSION_KEY,
+    CODEC_KEY,
     CONNECTION_TYPE_KEY,
     DIRECTION_KEY,
     FAILED_REASON_KEY,
     HANGUP_REASON_KEY,
+    MOS_KEY,
     NETWORK_KEY,
     NETWORK_OPERATOR_KEY,
     OS_KEY,
@@ -52,45 +54,71 @@ DOCKER_TAG = Counter('docker_tag', 'See which docker tag is running.', ['docker_
 VIALER_CALL_SUCCESS_TOTAL = Counter(
     VIALER_CALL_SUCCESS_TOTAL_KEY,
     'The amount of successful calls that were made using the Vialer app',
-    ['os', 'os_version', 'app_version', 'network', 'network_operator', 'connection_type', 'direction'],
+    [
+        'app_version',
+        'codec',
+        'connection_type',
+        'direction',
+        'mos',
+        'network',
+        'network_operator',
+        'os',
+        'os_version',
+    ],
 )
 
 VIALER_CALL_FAILURE_TOTAL = Counter(
     VIALER_CALL_FAILURE_TOTAL_KEY,
     'The amount of calls that failed during setup using the Vialer app',
-    ['os', 'os_version', 'app_version', 'network', 'connection_type', 'network_operator', 'direction',
-     'failed_reason'],
+    [
+        'app_version',
+        'connection_type',
+        'direction',
+        'failed_reason',
+        'network',
+        'network_operator',
+        'os',
+        'os_version',
+    ],
 )
 
 VIALER_HANGUP_REASON_TOTAL = Counter(
     VIALER_HANGUP_REASON_TOTAL_KEY,
     'The amount of why a call was ended for the Vialer app',
-    ['os', 'os_version', 'app_version', 'network', 'network_operator', 'connection_type', 'direction',
-     'hangup_reason'],
+    [
+        'app_version',
+        'connection_type',
+        'direction',
+        'hangup_reason',
+        'network',
+        'network_operator',
+        'os',
+        'os_version',
+    ],
 )
 
 VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL = Counter(
     VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL_KEY,
     'The amount of failed called due to the device not responding to a push notification',
-    ['os', 'direction', 'failed_reason'],
+    ['direction', 'os', 'failed_reason'],
 )
 
 VIALER_MIDDLEWARE_PUSH_NOTIFICATION_SUCCESS_TOTAL = Counter(
     VIALER_MIDDLEWARE_PUSH_NOTIFICATION_SUCCESS_TOTAL_KEY,
     'The amount of push notifications that were successful processed by the app',
-    ['os', 'direction'],
+    ['direction', 'os'],
 )
 
 VIALER_MIDDLEWARE_INCOMING_CALL_SUCCESS_TOTAL = Counter(
     VIALER_MIDDLEWARE_INCOMING_CALL_SUCCESS_TOTAL_KEY,
     'The amount of times an incoming call was presented at the middleware',
-    ['os', 'action'],
+    ['action', 'os'],
 )
 
 VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL = Counter(
     VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL_KEY,
     'The amount of times an incoming call that were presented but couldn\'t be handled',
-    ['os', 'action', 'failed_reason'],
+    ['action', 'failed_reason', 'os'],
 )
 
 
@@ -159,13 +187,15 @@ def increment_vialer_call_success_metric_counter():
         # Parse the string to a dict.
         value_dict = literal_eval(value_str)
         VIALER_CALL_SUCCESS_TOTAL.labels(
-            os=value_dict[OS_KEY],
-            os_version=value_dict[OS_VERSION_KEY],
             app_version=value_dict[APP_VERSION_KEY],
-            network=value_dict[NETWORK_KEY],
-            network_operator=value_dict.get(NETWORK_OPERATOR_KEY, ''),
+            codec=value_dict[CODEC_KEY],
             connection_type=value_dict[CONNECTION_TYPE_KEY],
             direction=value_dict[DIRECTION_KEY],
+            mos=value_dict[MOS_KEY],
+            network=value_dict[NETWORK_KEY],
+            network_operator=value_dict.get(NETWORK_OPERATOR_KEY, ''),
+            os=value_dict[OS_KEY],
+            os_version=value_dict[OS_VERSION_KEY],
         ).inc()
 
     # Trim the list, this means that the values that are outside
@@ -188,14 +218,14 @@ def increment_vialer_call_failure_metric_counter():
         # Parse the string to a dict.
         value_dict = literal_eval(value_str)
         VIALER_CALL_FAILURE_TOTAL.labels(
-            os=value_dict[OS_KEY],
-            os_version=value_dict[OS_VERSION_KEY],
             app_version=value_dict[APP_VERSION_KEY],
-            network=value_dict[NETWORK_KEY],
-            network_operator=value_dict.get(NETWORK_OPERATOR_KEY, ''),
             connection_type=value_dict[CONNECTION_TYPE_KEY],
             direction=value_dict[DIRECTION_KEY],
             failed_reason=value_dict[FAILED_REASON_KEY],
+            network=value_dict[NETWORK_KEY],
+            network_operator=value_dict.get(NETWORK_OPERATOR_KEY, ''),
+            os=value_dict[OS_KEY],
+            os_version=value_dict[OS_VERSION_KEY],
         ).inc()
 
     # Trim the list, this means that the values that are outside
@@ -218,14 +248,14 @@ def increment_vialer_hangup_reason_metric_counter():
         # Parse the string to a dict.
         value_dict = literal_eval(value_str)
         VIALER_HANGUP_REASON_TOTAL.labels(
-            os=value_dict[OS_KEY],
-            os_version=value_dict[OS_VERSION_KEY],
             app_version=value_dict[APP_VERSION_KEY],
-            network=value_dict[NETWORK_KEY],
-            network_operator=value_dict.get(NETWORK_OPERATOR_KEY, ''),
             connection_type=value_dict[CONNECTION_TYPE_KEY],
             direction=value_dict[DIRECTION_KEY],
             hangup_reason=value_dict[HANGUP_REASON_KEY],
+            network=value_dict[NETWORK_KEY],
+            network_operator=value_dict.get(NETWORK_OPERATOR_KEY, ''),
+            os=value_dict[OS_KEY],
+            os_version=value_dict[OS_VERSION_KEY],
         ).inc()
 
     # Trim the list, this means that the values that are outside
@@ -253,9 +283,9 @@ def increment_vialer_middleware_failed_push_notifications_metric_counter():
         # Parse the string to a dict.
         value_dict = literal_eval(value_str)
         VIALER_MIDDLEWARE_PUSH_NOTIFICATION_FAILED_TOTAL.labels(
-            os=value_dict[OS_KEY],
             direction=value_dict[DIRECTION_KEY],
             failed_reason=value_dict[FAILED_REASON_KEY],
+            os=value_dict[OS_KEY],
         ).inc()
 
     # Trim the list, this means that the values that are outside
@@ -283,8 +313,8 @@ def increment_vialer_middleware_success_push_notifications_metric_counter():
         # Parse the string to a dict.
         value_dict = literal_eval(value_str)
         VIALER_MIDDLEWARE_PUSH_NOTIFICATION_SUCCESS_TOTAL.labels(
-            os=value_dict[OS_KEY],
             direction=value_dict[DIRECTION_KEY],
+            os=value_dict[OS_KEY],
         ).inc()
 
     # Trim the list, this means that the values that are outside
@@ -312,8 +342,8 @@ def increment_vialer_middleware_incoming_call_metric_counter():
         # Parse the string to a dict.
         value_dict = literal_eval(value_str)
         VIALER_MIDDLEWARE_INCOMING_CALL_SUCCESS_TOTAL.labels(
-            os=value_dict[OS_KEY],
             action=value_dict[ACTION_KEY],
+            os=value_dict[OS_KEY],
         ).inc()
 
     # Trim the list, this means that the values that are outside
@@ -341,9 +371,9 @@ def increment_vialer_middleware_failed_incoming_call_metric_counter():
         # Parse the string to a dict.
         value_dict = literal_eval(value_str)
         VIALER_MIDDLEWARE_INCOMING_CALL_FAILED_TOTAL.labels(
-            os=value_dict[OS_KEY],
             action=value_dict[ACTION_KEY],
             failed_reason=value_dict[FAILED_REASON_KEY],
+            os=value_dict[OS_KEY],
         ).inc()
 
     # Trim the list, this means that the values that are outside
