@@ -12,6 +12,10 @@ xunit.xml
 flake8.txt
 # To avoid conflicts between dev en live yml.
 production.yml
-
-# Variables that will be added to the env on production/development.
 .env
+
+# Virtualenv
+.venv
+
+# Direnv stuff
+.direnv.master*

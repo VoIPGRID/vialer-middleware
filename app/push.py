@@ -1,10 +1,11 @@
 from collections import OrderedDict
 import datetime
+import json
 import logging
 import os
+import requests
 from time import time
 from urllib.parse import urljoin
-import requests
 
 from apns2.client import APNsClient
 from apns2.errors import APNsException, BadDeviceToken, DeviceTokenNotForTopic, Unregistered
@@ -280,7 +281,7 @@ def get_apns2_connection(app, device, unique_key):
             device=device,
         )
         apns2_connection_pool.update({
-            key: apns2_connection
+            app.app_id: apns2_connection,
         })
     else:
         # Test the existing connection, will throw an exception if this fails.
@@ -375,8 +376,8 @@ def send_fcm_message(device, app, message_type, data=None):
                 device=device,
             )
 
-            if (len(result['results']) > 0 and 'error' in result['results'][0] and
-                    result['results'][0]['error'] == 'NotRegistered'):
+            if (len(result['results']) > 0 and 'error' in result['results'][0]
+                    and result['results'][0]['error'] == 'NotRegistered'):
                 log_middleware_information(
                     '{0} | Removed {1}',
                     OrderedDict([
@@ -519,6 +520,7 @@ def send_gcm_message(device, app, message_type, data=None):
             device=device,
         )
 
+
 def send_pushy_message(device, app, message_type, data=None):
     """
     Send a Pushy message.
@@ -554,7 +556,7 @@ def send_pushy_message(device, app, message_type, data=None):
     try:
         api_key = settings.PUSHY_API_KEY
         response = requests.post('https://api.pushy.me/push?api_key=' + api_key, data=json.dumps(data))
-        if r.status_code == requests.codes.ok:
+        if response.status_code == requests.codes.ok:
             log_middleware_information(
                 '{0} | Pushy \'{1}\' message sent at time:{2}',
                 OrderedDict([
