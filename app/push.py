@@ -281,7 +281,7 @@ def get_apns2_connection(app, device, unique_key):
             device=device,
         )
         apns2_connection_pool.update({
-            app.app_id: apns2_connection,
+            key: apns2_connection,
         })
     else:
         # Test the existing connection, will throw an exception if this fails.
