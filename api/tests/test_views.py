@@ -15,10 +15,12 @@ from app.models import App, Device, ResponseLog
 from main.prometheus.consts import (
     APP_VERSION_KEY,
     CALL_SETUP_SUCCESSFUL_KEY,
+    CODEC_KEY,
     CONNECTION_TYPE_KEY,
     DIRECTION_KEY,
     FAILED_REASON_KEY,
     HANGUP_REASON_KEY,
+    MOS_KEY,
     NETWORK_KEY,
     NETWORK_OPERATOR_KEY,
     OS_KEY,
@@ -709,6 +711,8 @@ class LogMetricsTest(TestCase):
         self.data[CONNECTION_TYPE_KEY] = 'TLS'
         self.data[DIRECTION_KEY] = 'Incoming'
         self.data[CALL_SETUP_SUCCESSFUL_KEY] = 'true'
+        self.data[CODEC_KEY] = 'OPUS'
+        self.data[MOS_KEY] = '4.50'
         response = self.client.post(self.log_metrics_url, self.data)
         self.assertEquals(response.status_code, 200)
         self.assertEquals(self.redis_client.client.llen(self.success_redis_key), 1)
@@ -720,6 +724,8 @@ class LogMetricsTest(TestCase):
         self.assertEquals(self.data[NETWORK_KEY], value_dict[NETWORK_KEY])
         self.assertEquals(self.data[CONNECTION_TYPE_KEY], value_dict[CONNECTION_TYPE_KEY])
         self.assertEquals(self.data[DIRECTION_KEY], value_dict[DIRECTION_KEY])
+        self.assertEquals(self.data[CODEC_KEY], value_dict[CODEC_KEY])
+        self.assertEquals(self.data[MOS_KEY], value_dict[MOS_KEY])
 
     def test_if_call_failure_key_is_stored_in_redis_correctly(self):
         """

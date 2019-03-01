@@ -27,9 +27,11 @@ from app.utils import (
 from main.prometheus.consts import (
     ACTION_KEY,
     CALL_SETUP_SUCCESSFUL_KEY,
+    CODEC_KEY,
     DIRECTION_KEY,
     FAILED_REASON_KEY,
     HANGUP_REASON_KEY,
+    MOS_KEY,
     OS_KEY,
     VIALER_CALL_FAILURE_TOTAL_KEY,
     VIALER_CALL_SUCCESS_TOTAL_KEY,
@@ -631,6 +633,8 @@ class LogMetricsView(VialerAPIView):
             redis_cache.client.rpush(VIALER_HANGUP_REASON_TOTAL_KEY, metric_data)
         elif CALL_SETUP_SUCCESSFUL_KEY in json_data:
             if json_data.get(CALL_SETUP_SUCCESSFUL_KEY) == 'true':
+                metric_data[CODEC_KEY] = json_data.get(CODEC_KEY)
+                metric_data[MOS_KEY] = json_data.get(MOS_KEY)
                 redis_cache.client.rpush(VIALER_CALL_SUCCESS_TOTAL_KEY, metric_data)
             elif json_data.get(CALL_SETUP_SUCCESSFUL_KEY) == 'false':
                 metric_data[FAILED_REASON_KEY] = json_data.get(FAILED_REASON_KEY)
