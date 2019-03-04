@@ -554,8 +554,19 @@ def send_pushy_message(device, app, message_type, data=None):
     }
 
     try:
-        api_key = settings.PUSHY_API_KEY
-        response = requests.post('https://api.pushy.me/push?api_key=' + api_key, data=json.dumps(data))
+        response = requests.post('https://api.pushy.me/push?api_key=' + settings.PUSHY_API_KEY,
+                                 data=json.dumps(post_data))
+    except Exception as ex:
+        log_middleware_information(
+            '{0} | Error sending Pushy message: {1}',
+            OrderedDict([
+                ('unique_key', unique_key),
+                ('error', str(ex)),
+            ]),
+            logging.CRITICAL,
+            device=device,
+        )
+    else:
         if response.status_code == requests.codes.ok:
             log_middleware_information(
                 '{0} | Pushy \'{1}\' message sent at time:{2}',
@@ -579,13 +590,3 @@ def send_pushy_message(device, app, message_type, data=None):
                 logging.WARNING,
                 device=device,
             )
-    except Exception as ex:
-        log_middleware_information(
-            '{0} | Error sending Pushy message: {1}',
-            OrderedDict([
-                ('unique_key', unique_key),
-                ('error', str(ex)),
-            ]),
-            logging.CRITICAL,
-            device=device,
-        )
