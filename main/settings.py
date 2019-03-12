@@ -35,6 +35,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'raven.contrib.django.raven_compat',
     'rest_framework',
+    'main',
     'app',
     'api',
     'django_nose',
@@ -202,6 +203,31 @@ RAVEN_CONFIG = {
     'dsn': os.environ.get('SENTRY_DSN', None),
     'transport': 'raven.transport.requests.RequestsHTTPTransport',
 }
+
+
+# This is used to disable migrations to speed up database creation during
+# tests and initial dev setup.
+class NoMigrate(dict):
+    def __contains__(self, item):
+        """
+        Always return True so django uses the returned value.
+
+        Since django uses a specific 'app_label in MIGRATION_MODULES', a
+        defaultdict does not work.
+        """
+        return True
+
+    def __getitem__(self, item):
+        """
+        None marks an app to have no migrations, causing django to sync
+        it without trying to run its migrations.
+        """
+        return None
+
+
+if os.environ.get('SKIP_MIGRATE') == '1':
+    MIGRATION_MODULES = NoMigrate()
+
 
 PROMETHEUS_PORT = os.environ.get('PROMETHEUS_PORT', '9000')
 
