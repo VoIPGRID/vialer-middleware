@@ -15,3 +15,5 @@ production.yml
 
 # Variables that will be added to the env on production/development.
 .env
+.venv
+.direnv.master*
