@@ -17,3 +17,5 @@ RUN pip install -r requirements.txt
 
 # Add code.
 ADD . /usr/src/app
+
+CMD /usr/src/app/deploy/run.sh
