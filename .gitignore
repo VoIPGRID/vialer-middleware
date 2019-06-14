@@ -15,5 +15,9 @@ production.yml
 
 # Variables that will be added to the env on production/development.
 .env
+
+# NixOS
 .venv
+.envrc
+default.nix
 .direnv.master*
