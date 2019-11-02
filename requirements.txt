@@ -8,7 +8,7 @@ apns2==0.4.1
 python-gcm==0.4.0
 pyfcm==1.4.2
 
-Django==1.11.20
+Django==1.11.23
 
 # Framwork used for the API.
 djangorestframework==3.6.4
